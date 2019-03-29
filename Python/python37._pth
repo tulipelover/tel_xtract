@@ -1,0 +1,9 @@
+python37.zip
+DLLs
+Lib
+Scripts
+tcl
+.
+
+# Uncomment to run site.main() automatically
+import site
