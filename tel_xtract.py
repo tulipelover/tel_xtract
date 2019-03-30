@@ -581,11 +581,14 @@ def extract_data(case_data):
                         if key in call_logs_headers:
                             if key == 'type':
                                 if value == '1':
-                                    info_list.append('Reçu')
+                                    bg_color = '#9de89d'
+                                    info_list.append(['Reçu', bg_color])
                                 elif value == '2':
-                                    info_list.append('Emis')
+                                    bg_color = '#ffe591'
+                                    info_list.append(['Emis', bg_color])
                                 elif value == '3':
-                                    info_list.append('Manqué')
+                                    bg_color = '#a8d5ff'
+                                    info_list.append(['Manqué', bg_color])
                                 elif value == '4':
                                     info_list.append('Messagerie Vocale')
                                 elif value == '5':
@@ -620,7 +623,6 @@ def extract_data(case_data):
         logging.exception('There was an error opening {}'.format(forensics_file_list[0]))
         call_logs_list = ['']
         pass
-
     summary_list.append(['<a href="{}">Journaux d\'Appels</a>'.format(call_logs), str(len(call_logs_list) - 1)])
     close_popup(window)
     logging.info('Finished parsing call log data')
@@ -652,7 +654,14 @@ def extract_data(case_data):
                                     info_list.append('Autre')
                             elif key == 'body':
                                 value1 = textwrap.fill(value, 50)
-                                info_list.append(value1)
+                                if row['type'] == '1':
+                                    bg_color = '#9de89d'
+                                    info_list.append([value1, bg_color])
+                                elif row['type'] == '2':
+                                    bg_color = '#ffe591'
+                                    info_list.append([value1, bg_color])
+                                else:
+                                    info_list.append(value1)
                             elif key == 'address':
                                 if value in id_dict.keys():
                                     info_list.append(id_dict[value])
@@ -729,7 +738,6 @@ def extract_data(case_data):
                     logging.exception('There was an error parsing MMS {}'.format(row))
                     continue
         logging.info('Finished parsing MMS data')
-        # print(info_mms_dict)
 
         # Get MMSParts data
         logging.info('Starting MMSParts extraction')
@@ -824,16 +832,21 @@ def extract_data(case_data):
         mms_list = list()
         for key, value in info_mms_dict.items():
             if key in parts_dict.keys():
-                value = value + [parts_dict[key]]
+                if info_mms_dict[key][3] == 'Emis':
+                    bg_color = '#ffe591'
+                    value = value + [[parts_dict[key], bg_color]]
+                else:
+                    bg_color = '#9de89d'
+                    value = value + [[parts_dict[key], bg_color]]
                 mms_list.append(value)
-        # mms_list.sort(key=lambda x: datetime.strptime(operator.itemgetter(2), '%d-%m-%Y %H:%M:%S'))
         mms_list.sort(key=lambda x: datetime.strptime(x[2], '%d-%m-%Y %H:%M:%S'), reverse=True)
         mms_header = ['N°', 'Contact', 'Date - Heure', 'Type', 'Lu', 'Message']
         mms_list.insert(0, mms_header)
     except:
         logging.exception('There was an error opening {} or {}'.format(forensics_file_list[3], forensics_file_list[4]))
         mms_list = ['']
-
+    
+    # print(mms_list)
     summary_list.append(['<a href="{}">MMS</a>'.format(mms), str(len(mms_list) - 1)])
     close_popup(window)
     logging.info('Finished merging MMS and MMSParts data')
@@ -864,6 +877,16 @@ def make_html_element(type, content='', link_name='', image_width='100', image_h
         table_list.append('<table>')
         count = 0
         for row in content:
+            # Check of body contains background color and extract it
+            if isinstance(row[-1], list):
+                formatted_body = row[-1]
+                bg_color = formatted_body[-1]
+                body = formatted_body[0]
+                del row[-1]
+                row.insert(len(row) - 1, body)
+            else:
+                bg_color = '#CECECE'
+
             # Get the table headers
             if count == 0:
                 table_list.append('<thead>')
@@ -875,7 +898,7 @@ def make_html_element(type, content='', link_name='', image_width='100', image_h
                 count += 1
             # Get the rest of the content
             else:
-                table_list.append('<tr>')
+                table_list.append('<tr style="background-color: {};">'.format(bg_color))
                 for item in row:
                     table_list.append('<td>{}</td>'.format(item))
                 table_list.append('</tr>')
@@ -980,7 +1003,7 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    # get_info()
+    get_info()
     case_data = prepare_case_data(values)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
