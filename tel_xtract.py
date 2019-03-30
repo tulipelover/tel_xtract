@@ -132,12 +132,12 @@ html_internal_dir = os.path.join(report_dir, 'Internal')
 
 # Define forensics files lists and paths
 # Define raw files paths
-call_log = os.path.join(raw_dir, 'CallLog Calls.csv')
-mms = os.path.join(raw_dir, 'MMS.csv')
-sms = os.path.join(raw_dir, 'SMS.csv')
-contacts = os.path.join(raw_dir, 'Contacts Phones.csv')
-info = os.path.join(raw_dir, 'info.xml')
-mmsparts = os.path.join(raw_dir, 'MMSParts.csv')
+raw_call_log = os.path.join(raw_dir, 'CallLog Calls.csv')
+raw_mms = os.path.join(raw_dir, 'MMS.csv')
+raw_sms = os.path.join(raw_dir, 'SMS.csv')
+raw_contacts = os.path.join(raw_dir, 'Contacts Phones.csv')
+raw_info = os.path.join(raw_dir, 'info.xml')
+raw_mmsparts = os.path.join(raw_dir, 'MMSParts.csv')
 
 # Define reworked files paths
 call_log_final = os.path.join(csv_dir, 'CallLog Calls.csv')
@@ -148,15 +148,24 @@ info_final = os.path.join(csv_dir, 'info.xml')
 mmsparts_final = os.path.join(csv_dir, 'MMSParts.csv')
 
 csv_forensic_file_list = [call_log_final, contacts_final, info_final, mms_final, mmsparts_final, sms_final]
-raw_forensic_file_list = [call_log, contacts, info, mms, mmsparts, sms]
+raw_forensic_file_list = [raw_call_log, raw_contacts, raw_info, raw_mms, raw_mmsparts, raw_sms]
 
-# html report paths
+# html images report paths
 index_image_path = 'Internal/index_image.png'
 file_not_found_rel_path = 'Internal/image-not-found.png'
 video_not_found_rel_path = 'Internal/video-not-found.png'
 video_icon_rel_path = 'Internal/video.png'
 audio_not_found_rel_path = 'Internal/audio-not-found.png'
 audio_icon_rel_path = 'Internal/audio.png'
+
+# Define each file path for the html index links
+contacts = 'Contacts.html'
+call_logs = 'Journaux d\'Appels.html'
+sms = 'SMS.html'
+mms = 'MMS.html'
+index = 'Index.html'
+apps = 'Applications.html'
+tel_info = 'Infos Tel.html'
 
 logging.info('Finished defining variables')
 
@@ -374,49 +383,49 @@ def prepare_data(values, case_data):
                 f.write(binary_value)
     # Change dates for each file then save the new csv file
     try:
-        change_date(call_log, call_log_final)
-        logging.info('Successfully changed dates in {}'.format(call_log))
+        change_date(raw_call_log, call_log_final)
+        logging.info('Successfully changed dates in {}'.format(raw_call_log))
     except:
-        logging.exception('Error changing dates in {}'.format(call_log))
+        logging.exception('Error changing dates in {}'.format(raw_call_log))
         pass
 
     try:
-        change_date(mms, mms_final)
-        logging.info('Successfully changed dates in {}'.format(mms))
+        change_date(raw_mms, mms_final)
+        logging.info('Successfully changed dates in {}'.format(raw_mms))
     except:
-        logging.exception('Error changing dates in {}'.format(mms))
+        logging.exception('Error changing dates in {}'.format(raw_mms))
         pass
 
     try:
-        change_date(sms, sms_final)
-        logging.info('Successfully changed dates in {}'.format(sms))
+        change_date(raw_sms, sms_final)
+        logging.info('Successfully changed dates in {}'.format(raw_sms))
     except:
-        logging.exception('Error changing dates in {}'.format(sms))
+        logging.exception('Error changing dates in {}'.format(raw_sms))
         pass
 
     try:
-        change_date(contacts, contacts_final)
-        logging.info('Successfully changed dates in {}'.format(contacts))
+        change_date(raw_contacts, contacts_final)
+        logging.info('Successfully changed dates in {}'.format(raw_contacts))
     except:
-        logging.exception('Error changing dates in {}'.format(contacts))
+        logging.exception('Error changing dates in {}'.format(raw_contacts))
         pass
 
     # Copy forensic files that don't contain dates
     try:
-        with open(info, encoding='utf8') as fr, open(info_final, 'w', encoding='utf8') as fw:
+        with open(raw_info, encoding='utf8') as fr, open(info_final, 'w', encoding='utf8') as fw:
             content = fr.read()
             content = content.replace('&', '&amp;').replace('<3', '#COEUR#')
             fw.write(content)
-        logging.info('Successfully copied {}'.format(info))
+        logging.info('Successfully copied {}'.format(raw_info))
     except:
-        logging.exception('Error copying {}'.format(info))
+        logging.exception('Error copying {}'.format(raw_info))
         pass
 
     try:
-        shutil.copy2(mmsparts, mmsparts_final)
-        logging.info('Successfully copied {}'.format(mmsparts))
+        shutil.copy2(raw_mmsparts, mmsparts_final)
+        logging.info('Successfully copied {}'.format(raw_mmsparts))
     except:
-        logging.exception('Error copying {}'.format(mmsparts))
+        logging.exception('Error copying {}'.format(raw_mmsparts))
         pass
 
     # Copy all non forensics files
@@ -514,7 +523,7 @@ def extract_data(case_data):
         programs_list = ['']
         pass
 
-    summary_list.append(['Applications', str(len(programs_list))])
+    summary_list.append(['<a href="{}">Applications</a>'.format(apps), str(len(programs_list))])
     close_popup(window)
     logging.info('Finished parsing phone information and application information')
 
@@ -553,7 +562,7 @@ def extract_data(case_data):
         contact_list = ['']
         pass
 
-    summary_list.append(['Contacts', str(len(contact_list) - 1)])
+    summary_list.append(['<a href="{}">Contacts</a>'.format(contacts), str(len(contact_list) - 1)])
     close_popup(window)
     logging.info('Finished parsing contact data')
 
@@ -608,7 +617,7 @@ def extract_data(case_data):
         call_logs_list = ['']
         pass
 
-    summary_list.append(['Journaux d\'Appels', str(len(call_logs_list) - 1)])
+    summary_list.append(['<a href="{}">Journaux d\'Appels</a>'.format(call_logs), str(len(call_logs_list) - 1)])
     close_popup(window)
     logging.info('Finished parsing call log data')
 
@@ -674,7 +683,7 @@ def extract_data(case_data):
         logging.error('There was an error opening {}'.format(forensics_file_list[5]))
         sms_list = ['']
 
-    summary_list.append(['SMS', str(len(sms_list) - 1)])
+    summary_list.append(['<a href="{}">SMS</a>'.format(sms), str(len(sms_list) - 1)])
     close_popup(window)
     logging.info('Finished parsing SMS data')
 
@@ -821,7 +830,7 @@ def extract_data(case_data):
         logging.exception('There was an error opening {} or {}'.format(forensics_file_list[3], forensics_file_list[4]))
         mms_list = ['']
 
-    summary_list.append(['MMS', str(len(mms_list) - 1)])
+    summary_list.append(['<a href="{}">MMS</a>'.format(mms), str(len(mms_list) - 1)])
     close_popup(window)
     logging.info('Finished merging MMS and MMSParts data')
 
@@ -901,14 +910,6 @@ def generate_html(file_content, title, type='table', page='default', extra_data=
     # Define paths to create the html file
     html_filename = title + '.html'
     current_html_path = os.path.join(report_dir, html_filename)
-    # Define each files' path for the index links
-    contacts = 'Contacts.html'
-    call_logs = 'Journaux d\'Appels.html'
-    sms = 'SMS.html'
-    mms = 'MMS.html'
-    index = 'Index.html'
-    apps = 'Applications.html'
-    tel_info = 'Infos Tel.html'
     try:
         global html_list
         html_list.append('<div class="column left">')
@@ -975,7 +976,7 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    get_info()
+    # get_info()
     case_data = prepare_case_data(values)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
