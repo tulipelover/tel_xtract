@@ -166,6 +166,9 @@ index = 'Index.html'
 apps = 'Applications.html'
 tel_info = 'Infos Tel.html'
 
+# Define all numbers communicated file path
+num_list_file = os.path.join(csv_dir, 'numeros.csv')
+
 logging.info('Finished defining variables')
 
 
@@ -861,27 +864,46 @@ def extract_data(case_data):
 
 
 def get_all_numbers_communicated(call_logs_data, sms_data, mms_data):
-    numbers_set = set()
-    for entry in call_logs_data[1:]:
-        formatted_number = entry[2].replace('+33', '0')
-        if len(formatted_number) == 10 or len(formatted_number) == 12:
-            numbers_set.add(formatted_number)
-    for entry in sms_data[1:]:
-        formatted_number = entry[2].replace('+33', '0')
-        if len(formatted_number) == 10 or len(formatted_number) == 12:
-            numbers_set.add(formatted_number)
-    for entry in mms_data:
-        formatted_number = entry[1].replace('+33', '0')
-        try:
-            tmp = int(formatted_number)
-            if len(formatted_number) == 10 or len(formatted_number) == 12:
-                numbers_set.add(formatted_number)
-        except ValueError:
-            continue
+    logging.info('Starting to gather all numbers who communicated with the phone')
+    # Gather all the phone numbers in all the data sets
+    try:
+        numbers_set = set()
+        for entry in call_logs_data[1:]:
+            formatted_number = entry[2].replace('+33', '0')
+            try:
+                tmp = int(formatted_number)
+                if len(formatted_number) == 10 or len(formatted_number) == 12:
+                    numbers_set.add(formatted_number)
+            except ValueError:
+                continue
+        for entry in sms_data[1:]:
+            formatted_number = entry[2].replace('+33', '0')
+            try:
+                tmp = int(formatted_number)
+                if len(formatted_number) == 10 or len(formatted_number) == 12:
+                    numbers_set.add(formatted_number)
+            except ValueError:
+                continue
+        for entry in mms_data:
+            formatted_number = entry[1].replace('+33', '0')
+            try:
+                tmp = int(formatted_number)
+                if len(formatted_number) == 10 or len(formatted_number) == 12:
+                    numbers_set.add(formatted_number)
+            except ValueError:
+                continue
+        numbers_list = list(numbers_set)
+        # Write them to file
+        with open(num_list_file, 'w', encoding='utf8', newline='') as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(['Numéro'])
+            for num in numbers_list:
+                csv_writer.writerow([num])
+    except:
+        logging.exception('There was an error collecting all the phone numbers')
+        pass
 
-
-        numbers_set.add(entry[1].replace('+33', '0'))
-    print(numbers_set)
+    logging.info('Finished gathering all the phone numbers and writing them to file')
 
 
 def make_html_element(type, content='', link_name='', image_width='100', image_height='100'):
