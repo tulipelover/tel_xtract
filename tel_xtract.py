@@ -167,7 +167,7 @@ apps = 'Applications.html'
 tel_info = 'Infos Tel.html'
 
 # Define all numbers communicated file path
-num_list_file = os.path.join(csv_dir, 'numeros.csv')
+num_list_file = os.path.join(csv_dir, 'Numéros_comm.csv')
 
 logging.info('Finished defining variables')
 
