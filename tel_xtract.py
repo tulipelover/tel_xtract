@@ -5,7 +5,7 @@ import subprocess
 import os
 import PySimpleGUI as sg
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 import csv
 import shutil
 import logging
@@ -603,6 +603,10 @@ def extract_data(case_data):
                                         name = ''
                                 else:
                                     name = row['name']
+                            elif key == 'duration':
+                                raw_time = value
+                                formatted_time = str(timedelta(seconds=int(raw_time)))
+                                info_list.append(formatted_time)
                             else:
                                 info_list.append(value)
                     info_list.insert(1, name)
