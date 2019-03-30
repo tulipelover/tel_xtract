@@ -548,7 +548,7 @@ def extract_data(case_data):
                                     info_list.append('Oui')
                             else:
                                 info_list.append(value)
-                    info_list.insert(0, info_list.pop(1))
+                    info_list.insert(0, info_list.pop(len(info_list) - 1))
                     contact_list.append(info_list)
                     id_dict[row['number'].replace(' ', '')] = row['name']
                 except:
