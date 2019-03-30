@@ -4,7 +4,6 @@ import adb
 import subprocess
 import os
 import PySimpleGUI as sg
-import hashlib
 from datetime import datetime, timedelta
 import csv
 import shutil
@@ -665,7 +664,9 @@ def extract_data(case_data):
                             elif key == 'address':
                                 if value in id_dict.keys():
                                     info_list.append(id_dict[value])
+                                    info_list.append(value)
                                 else:
+                                    info_list.append('Inconnu')
                                     info_list.append(value)
                             else:
                                 info_list.append(value)
@@ -690,7 +691,7 @@ def extract_data(case_data):
                         tid = value
                 asso_mms_contact[tid] = contact
 
-        sms_headers = ['Identifiant', 'Information Contact', 'Date et heure', 'Lu', 'Type', 'Message']
+        sms_headers = ['Identifiant', 'Nom Contact', 'Numéro', 'Date et heure', 'Lu', 'Type', 'Message']
         sms_list.insert(0, sms_headers)
     except:
         logging.error('There was an error opening {}'.format(forensics_file_list[5]))
@@ -845,8 +846,7 @@ def extract_data(case_data):
     except:
         logging.exception('There was an error opening {} or {}'.format(forensics_file_list[3], forensics_file_list[4]))
         mms_list = ['']
-    
-    # print(mms_list)
+
     summary_list.append(['<a href="{}">MMS</a>'.format(mms), str(len(mms_list) - 1)])
     close_popup(window)
     logging.info('Finished merging MMS and MMSParts data')
@@ -858,6 +858,30 @@ def extract_data(case_data):
     case_data['summary'] = summary_list
 
     return contact_list, call_logs_list, sms_list, programs_list, info_tel, mms_list, case_data
+
+
+def get_all_numbers_communicated(call_logs_data, sms_data, mms_data):
+    numbers_set = set()
+    for entry in call_logs_data[1:]:
+        formatted_number = entry[2].replace('+33', '0')
+        if len(formatted_number) == 10 or len(formatted_number) == 12:
+            numbers_set.add(formatted_number)
+    for entry in sms_data[1:]:
+        formatted_number = entry[2].replace('+33', '0')
+        if len(formatted_number) == 10 or len(formatted_number) == 12:
+            numbers_set.add(formatted_number)
+    for entry in mms_data:
+        formatted_number = entry[1].replace('+33', '0')
+        try:
+            tmp = int(formatted_number)
+            if len(formatted_number) == 10 or len(formatted_number) == 12:
+                numbers_set.add(formatted_number)
+        except ValueError:
+            continue
+
+
+        numbers_set.add(entry[1].replace('+33', '0'))
+    print(numbers_set)
 
 
 def make_html_element(type, content='', link_name='', image_width='100', image_height='100'):
@@ -883,7 +907,7 @@ def make_html_element(type, content='', link_name='', image_width='100', image_h
                 bg_color = formatted_body[-1]
                 body = formatted_body[0]
                 del row[-1]
-                row.insert(len(row) - 1, body)
+                row.insert(len(row), body)
             else:
                 bg_color = '#CECECE'
 
@@ -1003,10 +1027,11 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    get_info()
+    # get_info()
     case_data = prepare_case_data(values)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
+    get_all_numbers_communicated(call_logs_data, sms_data, mms_data)
     if values['report']:
         window = popup_working('Création du rapport')
         generate_html('', 'Index', page='index', extra_data=case_data)
