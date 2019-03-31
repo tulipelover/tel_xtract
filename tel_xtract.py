@@ -15,8 +15,6 @@ import time
 import json
 import base64
 
-
-# This is a test in the master branch
 # Get the starting application time
 start_time = time.time()
 
@@ -526,7 +524,6 @@ def extract_data(case_data):
                         package_link = '<a href="https://play.google.com/store/apps/details?id={0}" target="_blank">{0}</a>'.format(app_package_name)
                         info_list.append(package_link)
                     programs_list.append(info_list)
-        print(programs_list)
         programs_list.sort(key=lambda x: x[0])
         programs_list_headers = ['Nom de l\'application', 'Lien PlayStore']
         programs_list.insert(0, programs_list_headers)
@@ -773,7 +770,7 @@ def extract_data(case_data):
                         try:
                             image_path = 'Resources/{}'.format(row['cl'])
                             if row['cl'] != '':
-                                html_image_element = '<a href="{0}"><img src="{0}" width="100" height="100" title="{0}" onerror="this.src=\'{1}\'"></a><br /><a href="{0}">{0}</a>'.format(image_path, file_not_found_rel_path)
+                                html_image_element = '<a href="{0}" target="_blank"><img src="{0}" width="100" height="100" title="{0}" onerror="this.src=\'{1}\'"></a><br /><a href="{0}" target="_blank">{0}</a>'.format(image_path, file_not_found_rel_path)
                                 if numero in parts_dict:
                                     parts_dict[numero].append(html_image_element)
                                 else:
@@ -791,7 +788,7 @@ def extract_data(case_data):
                     elif 'video' in row['ct']:
                         video_path = 'Resources/{}'.format(row['cl'])
                         if row['cl'] != '':
-                            html_video_element = '<a href="{1}"><img src="{0}" width="100" height="100"></a><br /><a href="{1}">{1}</a>'.format(video_icon_rel_path, video_path)
+                            html_video_element = '<a href="{1}" target="_blank"><img src="{0}" width="100" height="100"></a><br /><a href="{1}" target="_blank">{1}</a>'.format(video_icon_rel_path, video_path)
                             if numero in parts_dict:
                                 parts_dict[numero].append(html_video_element)
                             else:
@@ -806,7 +803,7 @@ def extract_data(case_data):
                     elif 'audio' in row['ct']:
                         audio_path = 'Resources/{}'.format(row['cl'])
                         if row['cl'] != '':
-                            html_audio_element = '<a href="{1}"><img src="{0}" width="100" height="100"></a><br /><a href="{1}">{1}</a>'.format(audio_icon_rel_path, audio_path)
+                            html_audio_element = '<a href="{1}" target="_blank"><img src="{0}" width="100" height="100"></a><br /><a href="{1}" target="_blank">{1}</a>'.format(audio_icon_rel_path, audio_path)
                             if numero in parts_dict:
                                 parts_dict[numero].append(html_audio_element)
                             else:
@@ -820,7 +817,8 @@ def extract_data(case_data):
 
                     else:
                         if row['cl'] != '':
-                            html_other_element = '<p>*****{0}*****</p>'.format(row['cl'])
+                            other_element_path = os.path.join('Resources', row['cl'])
+                            html_other_element = '<a href="{0}" target="_blank">{0}</a>'.format(other_element_path)
                             if numero in parts_dict.keys():
                                 parts_dict[numero].append(html_other_element)
                             else:
@@ -965,7 +963,7 @@ def make_html_element(type, content='', link_name='', image_width='100', image_h
     elif type == 'image':
         html_list.append('<p><img src="{}" alt="Impossible d\'afficher l\'image" width="{}" height="{}" /></p>'.format(content, image_width, image_height))
     elif type == 'link':
-        html_list.append('<p><a href="{}">{}</a></p>'.format(content, link_name))
+        html_list.append('<p><a href="{}" target="_blank">{}</a></p>'.format(content, link_name))
     elif type == 'list':
         formatted_list = list(list_chunks(content, 20))
         for section in formatted_list:
@@ -1060,7 +1058,7 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    get_info()
+    # get_info()
     case_data = prepare_case_data(values)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
