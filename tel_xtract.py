@@ -513,18 +513,21 @@ def extract_data(case_data):
 
         # Get apps list
         for application in fichier_info.xpath("/android-forensics/applications/app"):
-            info_list = list()
             for repertoire in application.xpath("sourceDir"):
                 if repertoire.text.split('/')[1] == "data":
+                    info_list = list()
                     for nom in application.xpath("label"):
                         app = str(nom.text).replace('&amp;', '&').replace('#COEUR#', '<3')
                         info_list.append(app)
                     for package_name in application.xpath('packageName'):
                         app_package_name = str(package_name.text)
-                        package_link = '<a href="https://play.google.com/store/apps/details?id={}">Détails sur l\'application.</a>'.format(app_package_name)
+                        package_link = '<a href="https://play.google.com/store/apps/details?id={0}">{0}</a>'.format(app_package_name)
                         info_list.append(package_link)
-            programs_list.append(info_list)
-        programs_list.sort()
+                    programs_list.append(info_list)
+        print(programs_list)
+        programs_list.sort(key=lambda x: x[0])
+        programs_list_headers = ['Nom de l\'application', 'Lien PlayStore']
+        programs_list.insert(0, programs_list_headers)
     except:
         logging.exception('There was an error parsing {}'.format(forensics_file_list[2]))
         info_tel = ['']
@@ -1067,7 +1070,7 @@ def main():
         generate_html(contact_data, 'Contacts')
         generate_html(call_logs_data, 'Journaux d\'Appels')
         generate_html(sms_data, 'SMS')
-        generate_html(program_data, 'Applications', type='list')
+        generate_html(program_data, 'Applications')
         generate_html(mms_data, 'MMS')
         close_popup(window)
     # cleanup()
