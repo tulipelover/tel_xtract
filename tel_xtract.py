@@ -513,11 +513,17 @@ def extract_data(case_data):
 
         # Get apps list
         for application in fichier_info.xpath("/android-forensics/applications/app"):
+            info_list = list()
             for repertoire in application.xpath("sourceDir"):
                 if repertoire.text.split('/')[1] == "data":
                     for nom in application.xpath("label"):
-                        app = str(nom.text)
-                        programs_list.append(app)
+                        app = str(nom.text).replace('&amp;', '&').replace('#COEUR#', '<3')
+                        info_list.append(app)
+                    for package_name in application.xpath('packageName'):
+                        app_package_name = str(package_name.text)
+                        package_link = '<a href="https://play.google.com/store/apps/details?id={}">Détails sur l\'application.</a>'.format(app_package_name)
+                        info_list.append(package_link)
+            programs_list.append(info_list)
         programs_list.sort()
     except:
         logging.exception('There was an error parsing {}'.format(forensics_file_list[2]))
