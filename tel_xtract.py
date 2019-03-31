@@ -1058,7 +1058,7 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    # get_info()
+    get_info()
     case_data = prepare_case_data(values)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
