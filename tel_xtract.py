@@ -521,7 +521,7 @@ def extract_data(case_data):
                         info_list.append(app)
                     for package_name in application.xpath('packageName'):
                         app_package_name = str(package_name.text)
-                        package_link = '<a href="https://play.google.com/store/apps/details?id={0}">{0}</a>'.format(app_package_name)
+                        package_link = '<a href="https://play.google.com/store/apps/details?id={0}" target="_blank">{0}</a>'.format(app_package_name)
                         info_list.append(package_link)
                     programs_list.append(info_list)
         print(programs_list)
@@ -1058,7 +1058,7 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    get_info()
+    # get_info()
     case_data = prepare_case_data(values)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
