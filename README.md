@@ -1,19 +1,22 @@
 # tel_xtract
 
 ## Description
-Tel_xtract est un programme à base de Python ayant pour vocation l'extraction de supports mobiles tournant sous Android de manière 
-forensique. Ce logiciel cible plus particulièrement les membres de la communauté des forces l'ordre spécialement formés
-aux investigations numériques et à l'analyse criminalistique de supports informatiques cependant il n'en reste pas 
-moins open source.  
+Tel_xtract est un programme à base de Python ayant pour vocation l'extraction de supports mobiles tournant sous Android 
+de manière forensique. Ce logiciel cible plus particulièrement les membres de la communauté des forces l'ordre 
+spécialement formés aux investigations numériques et à l'analyse criminalistique de supports informatiques cependant 
+il n'en reste pas moins open source.  
 Ce logiciel n’a pas pour but de concurrencer les solutions payantes de grosses entreprises. Il permet à l'enquêteur 
 d'extraire de manière forensique les données élémentaires d'un téléphone et ce avec le moins d'effort possible de la 
 part de l'utilisateur.  
 Le résultat de l'exploitation est un dossier contenant des fichiers au format CSV facilement exploitables par d'autres 
 outils et un rapport au format HTML. Ce dernier reprend toutes les données contenues dans ces fichiers CSV.
 
+## Installation
+Aucune installation n’est nécessaire. Le paquet est totalement portable sous Windows pour le moment.
+
 ## Utilisation
 ### A faire avant d'utiliser le programme :
-Il et indispensable d’activer le mode ADB (« Android Debug Bridge »). Pour ce faire n’hésitez pas à vous reporter aux 
+Il est indispensable d’activer le mode ADB (« Android Debug Bridge »). Pour ce faire n’hésitez pas à vous reporter aux 
 informations du constructeur. (en effet selon les versions d’Android et les modèles d’appareils, les manipulations sont 
 différentes).
 
@@ -29,26 +32,68 @@ laisser guider par le programme.
 A la fin du programme, un popup "Terminé!" s'affichera sur l'écran afin de vous signaler la fin de l'extraction
 
 ### Exploitation des résultats
-Coming Soon
+Le programme peut créer trois types de résultats stockés dans le dossier "Résultats" à la source du programme: 
+un dossier nommé "Fichiers CSV", un dossier nommé 'Rapport HTML' et un fichier "tel_xtract.log".
 
-## Installation
-Aucune installation n’est nécessaire. Le paquet est totalement portable sous Windows pour le moment.
+#### tel_xtract.log
+Ce fichier contient le log de l'extraction avec la date et l'heure de chaque opération. Il indiquera également toutes 
+les erreurs survenues lors de l'extraction.
+
+#### Fichiers CSV
+Ce dossier sera créé peu importe les options choisies dans l'interface graphique. Si l'extraction est entièrement 
+réussie, vous trouverez dans ce dossier les éléments suivants:
+* **Resources/**: Dossier contenant tous les éléments MMS extraits du téléphone.
+* **CallLog Calls.csv**:  Contient toutes les données des journaux d'appels.  
+* **Contacts Phones.csv**: Contient toutes les données des contacts stockés physiquement sur le téléphone.  
+* **info.xml**: Contient toutes les données liées au caractéristiques du téléphone et aux applications installées.  
+* **Informations.txt**: Contient toutes les données de traçabilité liées à l'exploitation.  
+* **MMS.csv**: Contient toutes les métadonnées liées aux MMS.  
+* **MMSParts.csv**: Contient toutes les données liées au contenu des MMS.  
+* **Numéros_comm.csv**: Contient tous les numéros de téléphone avec lesquels le téléphone a communiqué.  
+* **SMS.csv**: Contient toutes les données liées aux SMS.  
+
+#### Rapport HTML
+Ce dossier sera créé si la case "Rapport" est cochée dans l'interface graphique. Si l'extraction est entièrement 
+réussie, vous trouverez dans ce dossier les éléments suivants:
+* **Internal**: Dossier contenant tous les fichiers nécessaires à l'affichage des icônes du rapport HTML.
+* **Resources**: Dossier contenant tous les éléments MMS extraits du téléphone.
+* **Applications.html**: Fichier HTML contenant la liste des applications extraites du téléphone.
+* **Contacts.html**: Fichier HTML contenant la liste des contacts.
+* **Index.html**: Fichier HTML contenant l'index du rapport. En toute logique, ce fichier est le point de départ du 
+rapport.
+* **Infos Tel.html**: Fichier HTML contenant les informations propres au téléphone.
+* **Journaux d'Appels.html**: Fichier HTML contenant les journaux d'appels du téléphone.
+* **MMS.html**: Fichier HTML contenant la liste des MMS extraits ainsi que leur pièce(s) jointes(s).
+* **SMS.html**: Fichier HTML contenant la liste des MMS extraits.
+
+## Contribution
+Nous ne demandons pas d'argent pour l'avancement de l'application. Cependant, ceux qui souhaitent contribuer au bon 
+développement du programme peuvent nous envoyer le dossier "_forensics_" de l'extraction contenu dans le dossier 
+source de l'application suite à une exploitation.  
+**ATTENTION**: Le dossier "_forensics_" contient toutes les données brutes extraites du téléphone. En contribuant de 
+cette manière vous nous remettez toutes les informations sur votre téléphone. Nous précisons que ces données ont pour 
+seul but l'avancement du développement de l'application et que le contenu sémantique nous importe peu. Cependant, 
+l'avertissement s'impose.
+
+## Licence
+Ce logiciel est fourni sous licence GNU GPL3. Pour plus d'information concernant cette licence, voir le fichier 
+"_LICENSE_" du répertoire source de l'application.
 
 ## FAQ
 **Q**: Le programme ne démarre pas, que faire?  
-**R**: L'application ne nécessite aucun module ou pragramme externe pour fonctionner. Toutes les composantes nécessaires
+**R**: L'application ne nécessite aucun module ou programme externe pour fonctionner. Toutes les composantes nécessaires
 sont fournies dans le zip. Il peut cependant arriver que les antivirus n'apprécient pas forcément l'ADB. Dans ce cas,
 il faudra soit ajouter une exception à votre antivirus, soit le désactiver le temps de l'extraction.  
 
 **Q**: L'extraction s'est bien déroulée, j'ai tous mes fichiers dans les dossier "Résultats", "Fichiers CSV" et
 Rapport HTML. Pourquoi est-ce que certaines catégories du rapport sont vides?  
 **R**: A l'heure actuelle, la copie des données depuis les bases de données de la partition "Data" du téléphone se fait
-via l'APK open source AFLogical. Ce dernier tente, dans la mesure de sa programmation, d'extraire les données contenues
-dans les bases de données. Sur certains téléphones récents, les bases de données peuvent être légérement modifiées ce qui
-peut créer des erreurs lors de l'extraction. Tel_xtract exploite toutes les données sorties par AFLogical. Dans le cas 
-où les données extraites sont inexploitables ou absentes, le programme est conçu pour ignorer ces erreurs et exploiter
-tout ce qui est exploitable. Les données détaillées de l'extraction se trouve dans le fichier _tel_xtract.log_ dans le
-dossier "Résultats". La moindre erreur rencontrée par le logiciel sera visible dans ce fichier.
+via l'APK open source "_AFLogical_". Ce dernier tente, dans la mesure de sa programmation, d'extraire les données 
+contenues dans les bases de données. Sur certains téléphones récents, les bases de données peuvent être légérement 
+modifiées ce qui peut créer des erreurs lors de l'extraction. Tel_xtract exploite toutes les données sorties par 
+AFLogical. Dans le cas où les données extraites sont inexploitables ou absentes, le programme est conçu pour ignorer 
+ces erreurs et exploiter tout ce qui est exploitable. Les données détaillées de l'extraction se trouve dans le fichier 
+_tel_xtract.log_ dans le dossier "Résultats". La moindre erreur rencontrée par le logiciel sera loggée dans ce fichier.
 
 **Q**: Je rencontre un problème avec le logiciel qui ne figure pas dans cette section. Comment puis-je vous le signaler?  
 **R**: C'est simple! Il suffit de nous le signaler dans la section "Issues" sur GitHub. Tous les problèmes signalés
