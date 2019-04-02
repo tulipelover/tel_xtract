@@ -180,8 +180,6 @@ def tel_xtract_gui():
               [sg.T('Affaire:', size=(16, 1)), sg.In(key='affaire')],
               [sg.T('N° du scellé:', size=(16, 1)), sg.In(key='num_scelle')],
               [sg.T('Description du scellé:', size=(16, 1)), sg.In(key='desc_scelle')],
-              [sg.T('Marque du téléphone:', size=(16, 1)), sg.In(key='brand_tel')],
-              [sg.T('Modèle du téléphone:', size=(16, 1)), sg.In(key='model_tel')],
               [sg.T('Personne qualifiée:', size=(16, 1)), sg.In(key='examiner')],
               [sg.T('Etapes à suivre: [à retravailler plus tard!!]')],
               [sg.T('1. Activer les options développeur et le débogage USB sur le téléphone.')],
@@ -203,9 +201,6 @@ def tel_xtract_gui():
         if event in (None, 'quit'):
             logging.info('User chose to exit via the GUI. Exiting.')
             exit()
-        elif event == 'ok' and values['report'] and (not values['brand_tel'] or not values['model_tel']):
-            sg.Popup('Bien vouloir à minima renseigner la marque et le modèle du téléphone pour le rapport')
-            window.UnHide()
         else:
             window.Close()
             logging.info('GUI closed, user input returned')
@@ -259,6 +254,10 @@ def get_info():
             logging.exception('An error occured while detecting the phone')
     close_popup(window)
     window = popup_working('Installation du User Agent et récupération des données.')
+    # Get phone information from adb
+    phone_make = device.shell('getprop ro.product.brand').strip()
+    phone_model = device.shell('getprop ro.product.model').strip()
+    # Install the user agent and get info from it
     installed = False
     while not installed:
         try:
@@ -312,19 +311,23 @@ def get_info():
     logging.info('Finished creating and fetching data through ADB')
     os.chdir(script_dir)
 
+    return phone_make, phone_model
 
-def prepare_case_data(values):
+
+def prepare_case_data(values, phone_make, phone_model):
     """Prepare the data that will go in the cas information file and html index"""
 
     logging.info('Preparing case information')
     extra_data_dict = dict()
-    index_values_list = ['una', 'affaire', 'num_scelle', 'desc_scelle', 'examiner', 'brand_tel', 'model_tel']
+    index_values_list = ['una', 'affaire', 'num_scelle', 'desc_scelle', 'examiner']
     for key, value in values.items():
         if key in index_values_list:
             if value == '':
                 extra_data_dict[key] = 'Non renseigné'
             else:
                 extra_data_dict[key] = value
+    extra_data_dict['brand_tel'] = phone_make
+    extra_data_dict['model_tel'] = phone_model
     extra_data_dict['date'] = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     logging.info('Finished preparing case information')
     return extra_data_dict
@@ -475,25 +478,12 @@ def extract_data(case_data):
     window = popup_working('Lecture des informations du téléphone et des applications')
     info_tel = list()
     programs_list = list()
+    # Récupération des informations du téléphone et des programmes
     try:
         fichier_info = etree.parse(forensics_file_list[2])
-        for donnee in fichier_info.xpath("/android-forensics/build/brand"):
-            try:
-                marque = str(donnee.text.upper())
-                info_tel.append(['Marque', marque])
-            except:
-                logging.exception('Could not parse {}, {} in /android-forensics/build/brand'.format(forensics_file_list[2], donnee))
-                continue
-        for donnee in fichier_info.xpath("/android-forensics/build/model"):
-            try:
-                modele = str(donnee.text)
-                info_tel.append(['Modèle', modele])
-            except:
-                logging.exception('Could not parse {}, {} in /android-forensics/build/model'.format(forensics_file_list[2], donnee))
-                continue
-
-    # informations du téléphone et des programmes
-        # Get phone info
+        info_tel.append(['Marque', case_data['brand_tel']])
+        info_tel.append(['Modèle', case_data['model_tel']])
+        # Get phone info from info.xml
         for donnee in fichier_info.xpath("/android-forensics/IMSI"):
             imsi = str(donnee.text)
             info_tel.append(['ISMI', imsi])
@@ -1058,8 +1048,10 @@ def cleanup():
 
 def main():
     values = tel_xtract_gui()
-    get_info()
-    case_data = prepare_case_data(values)
+    phone_make, phone_model = get_info()
+    # phone_make = 'a'
+    # phone_model = 'a'
+    case_data = prepare_case_data(values, phone_make, phone_model)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
     get_all_numbers_communicated(call_logs_data, sms_data, mms_data)
