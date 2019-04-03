@@ -14,6 +14,7 @@ from lxml import etree
 import time
 import json
 import base64
+import webbrowser
 
 # Get the starting application time
 start_time = time.time()
@@ -115,6 +116,7 @@ with open(data_json_file, encoding='utf8') as f:
 app_icon = data_dict['app_icon']['app_icon'].encode('ascii')
 
 # Define PySImpleGUI parameters
+sg.ChangeLookAndFeel('Topanga')
 sg.SetOptions(icon=app_icon)
 
 # Define csv directory realted paths
@@ -176,17 +178,21 @@ def tel_xtract_gui():
     """Create the starting GUI"""
 
     # Create the layout
-    layout = [[sg.T('N° U.N.A:', size=(16, 1)), sg.In(key='una')],
+    layout = [[sg.T('Tel_Xtract', size=(23, 1), justification='center', font='Any 24 bold underline')],
+              [sg.T('', font='Any 5')],
+              [sg.T('N° U.N.A:', size=(16, 1)), sg.In(key='una')],
               [sg.T('Affaire:', size=(16, 1)), sg.In(key='affaire')],
               [sg.T('N° du scellé:', size=(16, 1)), sg.In(key='num_scelle')],
               [sg.T('Description du scellé:', size=(16, 1)), sg.In(key='desc_scelle')],
               [sg.T('Personne qualifiée:', size=(16, 1)), sg.In(key='examiner')],
-              [sg.T('Etapes à suivre: [à retravailler plus tard!!]')],
+              [sg.T('{}'.format('-' * 115))],
+              [sg.T('Etapes à suivre:', font='Any 10 underline')],
               [sg.T('1. Activer les options développeur et le débogage USB sur le téléphone.')],
               [sg.T('2. Cocher la case "Rapport" si ce dernier est souhaité.')],
               [sg.T('3. Si le téléphone n\'est pas reconnu par l\'ADB, le programme vous le dira.')],
               [sg.Checkbox('Rapport', key='report')],
               [sg.T('ATTENTION: Bien vouloir s\'assurer qu\'un seul téléphone est branché', font='Any 10 bold')],
+              [sg.T('{}'.format(' ' * 85)), sg.T('Licence', key='license', enable_events=True, justification='right', font='Any 7', text_color='blue'), sg.T('Manuel', key='manual', enable_events=True, justification='right', font='Any 7', text_color='blue')],
               [sg.Button('Valider', key='ok'), sg.Button('Quitter', key='quit')]]
 
     # Create the window
@@ -196,11 +202,19 @@ def tel_xtract_gui():
     # Open the window and read the results
     while True:
         event, values = window.Read()
-        window.Hide()
         logging.info('GUI closed, user input')
         if event in (None, 'quit'):
             logging.info('User chose to exit via the GUI. Exiting.')
+            window.Close()
             exit()
+        elif event == 'manual':
+            readme_html_path = os.path.join(script_resource_dir, 'Manuel.html')
+            webbrowser.open('file://' + readme_html_path)
+            continue
+        elif event == 'license':
+            license_path = script_dir + '/LICENSE.txt'
+            webbrowser.open('file://' + license_path)
+            continue
         else:
             window.Close()
             logging.info('GUI closed, user input returned')
@@ -234,10 +248,23 @@ def get_info():
     # Start the ADB server and try to install the AFLogical apk
     window = popup_working('démarrage de l\'ADB et détection du téléphone en cours...')
     device = False
+    wait_period = 1
     while not device:
-        subprocess.call("adb.exe start-server", shell=True)
+        if wait_period == 1:
+            subprocess.call("adb.exe start-server", shell=True)
+            time.sleep(4)
+            wait_period = 0
+        else:
+            subprocess.call("adb.exe start-server", shell=True)
         client = AdbClient(host="127.0.0.1", port=5037)
         try:
+            # Check to make sure only one device is detected by ADB and that the device is correctly detected
+            if len(client.devices()) > 1:
+                logging.info('Multiple devices detected by ADB.')
+                sg.PopupOK('Plusieurs appareils sont détectés par l\'ADB.\nBien vouloir déconnecter tous les appareils'
+                           'sauf celui à exploiter.')
+                logging.info('Checking if single device id detected by ADB again.')
+                continue
             device = client.devices()[0]
             logging.info('Phone detected by ADB')
         except IndexError:
@@ -333,42 +360,44 @@ def prepare_case_data(values, phone_make, phone_model):
     return extra_data_dict
 
 
-def change_date(old_file, new_file):
-    """Change the dates in the raw csv files"""
-
-    new_content = list()
-    with open(old_file, encoding='utf-8') as f:
-        content = csv.DictReader(f)
-        for row in content:
-            row = dict(row)
-            if 'date' in row.keys():
-                if os.path.basename(old_file) == 'MMS.csv':
-                    row['date'] = datetime.fromtimestamp(int(row['date'])).strftime('%d-%m-%Y %H:%M:%S')
-                else:
-                    row['date'] = datetime.fromtimestamp(int(row['date']) / 1000).strftime('%d-%m-%Y %H:%M:%S')
-            if 'date_sent' in row.keys():
-                if os.path.basename(old_file) == 'MMS.csv':
-                    row['date_sent'] = datetime.fromtimestamp(int(row['date_sent'])).strftime('%d-%m-%Y %H:%M:%S')
-                else:
-                    row['date_sent'] = datetime.fromtimestamp(int(row['date_sent']) / 1000).strftime('%d-%m-%Y %H:%M:%S')
-            if 'last_time_contacted' in row.keys():
-                try:
-                    if os.path.basename(old_file) == 'MMS.csv':
-                        row['last_time_contacted'] = datetime.fromtimestamp(int(row['last_time_contacted'])).strftime('%d-%m-%Y %H:%M:%S')
-                    else:
-                        row['last_time_contacted'] = datetime.fromtimestamp(int(row['last_time_contacted']) / 1000).strftime('%d-%m-%Y %H:%M:%S')
-                except ValueError:
-                    pass
-            new_content.append(row)
-    with open(new_file, 'w', encoding='utf-8', newline='') as f:
-        csv_dict_writer = csv.DictWriter(f, fieldnames=new_content[0].keys())
-        csv_dict_writer.writeheader()
-        for row in new_content:
-            csv_dict_writer.writerow(row)
-
-
 def prepare_data(values, case_data):
     """Prepare all the files for examination"""
+
+    def change_date(old_file, new_file):
+        """Change the dates in the raw csv files"""
+
+        new_content = list()
+        with open(old_file, encoding='utf-8') as f:
+            content = csv.DictReader(f)
+            for row in content:
+                row = dict(row)
+                if 'date' in row.keys():
+                    if os.path.basename(old_file) == 'MMS.csv':
+                        row['date'] = datetime.fromtimestamp(int(row['date'])).strftime('%d-%m-%Y %H:%M:%S')
+                    else:
+                        row['date'] = datetime.fromtimestamp(int(row['date']) / 1000).strftime('%d-%m-%Y %H:%M:%S')
+                if 'date_sent' in row.keys():
+                    if os.path.basename(old_file) == 'MMS.csv':
+                        row['date_sent'] = datetime.fromtimestamp(int(row['date_sent'])).strftime('%d-%m-%Y %H:%M:%S')
+                    else:
+                        row['date_sent'] = datetime.fromtimestamp(int(row['date_sent']) / 1000).strftime(
+                            '%d-%m-%Y %H:%M:%S')
+                if 'last_time_contacted' in row.keys():
+                    try:
+                        if os.path.basename(old_file) == 'MMS.csv':
+                            row['last_time_contacted'] = datetime.fromtimestamp(
+                                int(row['last_time_contacted'])).strftime('%d-%m-%Y %H:%M:%S')
+                        else:
+                            row['last_time_contacted'] = datetime.fromtimestamp(
+                                int(row['last_time_contacted']) / 1000).strftime('%d-%m-%Y %H:%M:%S')
+                    except ValueError:
+                        pass
+                new_content.append(row)
+        with open(new_file, 'w', encoding='utf-8', newline='') as f:
+            csv_dict_writer = csv.DictWriter(f, fieldnames=new_content[0].keys())
+            csv_dict_writer.writeheader()
+            for row in new_content:
+                csv_dict_writer.writerow(row)
 
     # Create the CSV files directory and html report directory if chosen
     logging.info('Preparing and formatting files')
@@ -905,95 +934,101 @@ def get_all_numbers_communicated(call_logs_data, sms_data, mms_data):
     logging.info('Finished gathering all the phone numbers and writing them to file')
 
 
-def make_html_element(type, content='', link_name='', image_width='100', image_height='100'):
-    # Function to divide table list into chunks of 18
-    def list_chunks(l, n):
-        for i in range(0, len(l), n):
-            yield l[i:i + n]
-
-    if type == 'h1':
-        html_list.append('<h1>{}</h1>'.format(content))
-    elif type == 'linebreak':
-        html_list.append('<p>&nbsp;</p>')
-    elif type == 'h2':
-        html_list.append('<h2>{}</h2>'.format(content))
-    elif type == 'table':
-        table_list = list()
-        table_list.append('<table>')
-        count = 0
-        for row in content:
-            # Check of body contains background color and extract it
-            if isinstance(row[-1], list):
-                formatted_body = row[-1]
-                bg_color = formatted_body[-1]
-                body = formatted_body[0]
-                del row[-1]
-                row.insert(len(row), body)
-            else:
-                bg_color = '#CECECE'
-
-            # Get the table headers
-            if count == 0:
-                table_list.append('<thead>')
-                table_list.append('<tr>')
-                for item in row:
-                    table_list.append('<th>{}</th>'.format(item))
-                table_list.append('</tr>')
-                table_list.append('</thead>')
-                count += 1
-            # Get the rest of the content
-            else:
-                table_list.append('<tr style="background-color: {};">'.format(bg_color))
-                for item in row:
-                    table_list.append('<td>{}</td>'.format(item))
-                table_list.append('</tr>')
-        table_list.append('</table>')
-        table = '\n'.join(table_list)
-        html_list.append(table)
-    elif type == 'image':
-        html_list.append('<p><img src="{}" alt="Impossible d\'afficher l\'image" width="{}" height="{}" /></p>'.format(content, image_width, image_height))
-    elif type == 'link':
-        html_list.append('<p><a href="{}" target="_blank">{}</a></p>'.format(content, link_name))
-    elif type == 'list':
-        formatted_list = list(list_chunks(content, 20))
-        for section in formatted_list:
-            html_list.append('<div style="width:175px; height:550px; float:left; margin-right:30px">')
-            html_list.append('<ul>')
-            for item in section:
-                html_list.append('<li style="font-size:12px">{}</li>'.format(item))
-            html_list.append('</ul>')
-            html_list.append('</div>')
-
-
-def finalize_html(filename):
-    # Insert the final formalities in the html list
-    html_list.insert(0, '<html>')
-    html_list.insert(1, '<head>')
-    html_list.insert(2, '<style>{}</style>'.format(table_css_style))
-    html_list.insert(3, '</head>')
-    html_list.insert(len(html_list), '</html>')
-    # Write HTML file to report directory
-    with open(filename, 'w', encoding='utf8') as f:
-        f.write('\n'.join(html_list))
-
-
 def generate_html(file_content, title, type='table', page='default', extra_data=dict()):
+    """Create the HTML report files"""
+
+    def make_html_element(type, content='', link_name='', image_width='100', image_height='100', link_target='_blank'):
+        """Creates the different HTML entities"""
+        # Function to divide table list into chunks of 18
+        def list_chunks(l, n):
+            for i in range(0, len(l), n):
+                yield l[i:i + n]
+
+        if type == 'h1':
+            html_list.append('<h1>{}</h1>'.format(content))
+        elif type == 'linebreak':
+            html_list.append('<p>&nbsp;</p>')
+        elif type == 'h2':
+            html_list.append('<h2>{}</h2>'.format(content))
+        elif type == 'table':
+            table_list = list()
+            table_list.append('<table>')
+            count = 0
+            for row in content:
+                # Check of body contains background color and extract it
+                if isinstance(row[-1], list):
+                    formatted_body = row[-1]
+                    bg_color = formatted_body[-1]
+                    body = formatted_body[0]
+                    del row[-1]
+                    row.insert(len(row), body)
+                else:
+                    bg_color = '#CECECE'
+
+                # Get the table headers
+                if count == 0:
+                    table_list.append('<thead>')
+                    table_list.append('<tr>')
+                    for item in row:
+                        table_list.append('<th>{}</th>'.format(item))
+                    table_list.append('</tr>')
+                    table_list.append('</thead>')
+                    count += 1
+                # Get the rest of the content
+                else:
+                    table_list.append('<tr style="background-color: {};">'.format(bg_color))
+                    for item in row:
+                        table_list.append('<td>{}</td>'.format(item))
+                    table_list.append('</tr>')
+            table_list.append('</table>')
+            table = '\n'.join(table_list)
+            html_list.append(table)
+        elif type == 'image':
+            html_list.append(
+                '<p><img src="{}" alt="Impossible d\'afficher l\'image" width="{}" height="{}" /></p>'.format(content,
+                                                                                                              image_width,
+                                                                                                              image_height))
+        elif type == 'link':
+            html_list.append('<p><a href="{0}" target="{2}">{1}</a></p>'.format(content, link_name, link_target))
+        elif type == 'list':
+            formatted_list = list(list_chunks(content, 20))
+            for section in formatted_list:
+                html_list.append('<div style="width:175px; height:550px; float:left; margin-right:30px">')
+                html_list.append('<ul>')
+                for item in section:
+                    html_list.append('<li style="font-size:12px">{}</li>'.format(item))
+                html_list.append('</ul>')
+                html_list.append('</div>')
+
+    def finalize_html(filename):
+        """Insert the final formalities in the html list and write the HTML file"""
+        html_list.insert(0, '<html>')
+        html_list.insert(1, '<head>')
+        html_list.insert(2, '<style>{}</style>'.format(table_css_style))
+        html_list.insert(3, '</head>')
+        html_list.insert(len(html_list), '</html>')
+        # Write HTML file to report directory
+        with open(filename, 'w', encoding='utf8') as f:
+            f.write('\n'.join(html_list))
+
     logging.info('Starting to generate HTML report for {}'.format(title))
     # Define paths to create the html file
     html_filename = title + '.html'
     current_html_path = os.path.join(report_dir, html_filename)
     try:
         global html_list
+        del html_list
+        html_list = list()
         html_list.append('<div class="column left">')
         make_html_element('image', index_image_path, image_width='150', image_height='150')
         make_html_element('h2', 'Index')
-        make_html_element('link', index, link_name='Page d\'Accueil')
-        make_html_element('link', tel_info, link_name='Infos Tel')
-        make_html_element('link', contacts, link_name='Contacts')
-        make_html_element('link', call_logs, link_name='Journaux d\'Appels')
-        make_html_element('link', sms, link_name='SMS')
-        make_html_element('link', mms, link_name='MMS')
-        make_html_element('link', apps, link_name='Applications')
+        make_html_element('link', index, link_name='Page d\'Accueil', link_target='')
+        make_html_element('link', tel_info, link_name='Infos Tel', link_target='')
+        make_html_element('link', contacts, link_name='Contacts', link_target='')
+        make_html_element('link', call_logs, link_name='Journaux d\'Appels', link_target='')
+        make_html_element('link', sms, link_name='SMS', link_target='')
+        make_html_element('link', mms, link_name='MMS', link_target='')
+        make_html_element('link', apps, link_name='Applications', link_target='')
         html_list.append('</div>')
         html_list.append('<div class="column middle">')
 
@@ -1024,7 +1059,6 @@ def generate_html(file_content, title, type='table', page='default', extra_data=
             make_html_element(type, file_content)
         html_list.append('</div>')
         finalize_html(current_html_path)
-        html_list = list()
         logging.info('Finished generating {}'.format(current_html_path))
     except:
         logging.exception('Error creating {}'.format(current_html_path))
@@ -1032,25 +1066,21 @@ def generate_html(file_content, title, type='table', page='default', extra_data=
 
 
 def cleanup():
-    # file_list = list()
-    # for root, _, files in os.walk(raw_dir):
-    #     for item in files:
-    #         file_path = os.path.join(root, item)
-    #         file_list.append(file_path)
-    # for files in file_list:
-    #     os.remove(files)
-    # os.rmdir(forensics_dir)
-    try:
-        os.remove('tmp.jpg')
-    except FileNotFoundError:
-        pass
+    file_list = list()
+    for root, _, files in os.walk(raw_dir):
+        for item in files:
+            file_path = os.path.join(root, item)
+            file_list.append(file_path)
+    for files in file_list:
+        os.remove(files)
+    os.rmdir(forensics_dir)
 
 
 def main():
     values = tel_xtract_gui()
-    phone_make, phone_model = get_info()
-    # phone_make = 'a'
-    # phone_model = 'a'
+    # phone_make, phone_model = get_info()
+    phone_make = 'a'
+    phone_model = 'a'
     case_data = prepare_case_data(values, phone_make, phone_model)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)

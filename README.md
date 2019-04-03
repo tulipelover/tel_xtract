@@ -12,7 +12,7 @@ Le résultat de l'exploitation est un dossier contenant des fichiers au format C
 outils et un rapport au format HTML. Ce dernier reprend toutes les données contenues dans ces fichiers CSV.
 
 ## Installation
-Aucune installation n’est nécessaire. Le paquet est totalement portable sous Windows pour le moment.
+Aucune installation n’est nécessaire. L'application est totalement portable sous Windows pour le moment.
 
 ## Utilisation
 ### A faire avant d'utiliser le programme :
@@ -24,8 +24,7 @@ différentes).
 Pour démarrer le programme, il suffit d’exécuter le fichier **_tel_xtract.bat_**. Cette action fera apparaître 
 une interface graphique vous demandant de renseigner des informations en lien avec le dossier en cours. Il s'agira
 ensuite de choisir si la création d'un rapport au format HTML est souhaitée (tous les renseignements concernant le
-dossier sont optionnels. Cependant, si la case "rapport" est cochée, il faudra obligatoirement remplir à minima la 
-marque et le modèle du téléphone exploité). Cliquer ensuite sur "Valider" pour lancer l'extraction.  
+dossier sont optionnels). Cliquer ensuite sur "Valider" pour lancer l'extraction.  
 Une fois l'extraction lancée, le déroulé des différentes étapes s'affiche en haut à gauche de l'écran dans un bandeau
 noir. Cette information vous permet de vous situer par rapport à l'avancée de l'extraction. Il suffit ensuite de se 
 laisser guider par le programme.  
@@ -108,6 +107,9 @@ Cette liste sera mise à jour au fur et à mesure des retours "terrains" et des 
 * Samsung S9
   * SMS et MMS: Réussite
   * Tout le reste: Echec
+* Samsung S9+
+  * SMS et MMS, applications et infos du téléphone: Réussite
+  * Contacts et journaux d'appels: Echec
   
 ### Huawei
 * Huawei Mate 9: Extraction complète réussie
