@@ -1073,14 +1073,16 @@ def cleanup():
             file_list.append(file_path)
     for files in file_list:
         os.remove(files)
-    os.rmdir(forensics_dir)
+    os.rmdir(raw_dir)
 
 
 def main():
+    """Main script function"""
+
     values = tel_xtract_gui()
-    # phone_make, phone_model = get_info()
-    phone_make = 'a'
-    phone_model = 'a'
+    phone_make, phone_model = get_info()
+    # phone_make = 'a'
+    # phone_model = 'a'
     case_data = prepare_case_data(values, phone_make, phone_model)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
