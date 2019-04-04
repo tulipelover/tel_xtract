@@ -100,19 +100,29 @@ dans cette section seront traités dès que possible. Pareillement, toutes les s
 nous les signaler dans la catégorie "Issues". Notre but est de parfaire le programme afin qu'il puisse être utile au
 plus grand nombre.
 
-## Téléphones Testés
+## Téléphones Testés et Problèmes Connus
+### Problèmes connus
+Il semble que le User Agent utilisé pour extraire le contenu du téléphonene ne s'intègre pas entièrement à Android 
+version 9. Ce problème est connu et nous faisons notre possible afin d'y remédier. A ce titre, il est fort probable que 
+les problèmes rencontrés sur les téléphones mentionnés ci-dessous soient dûs, en grande partie, à ce problème 
+d'intégration.  
 Cette liste sera mise à jour au fur et à mesure des retours "terrains" et des tests effectués.
 
-### Samsung
-* Samsung S9
-  * SMS et MMS: Réussite
-  * Tout le reste: Echec
-* Samsung S9+
+### Téléphones testés
+#### Samsung
+* S8 (Android 8): Extraction complète réussie
+* S9 (Android 9)
+  * SMS et MMS, applications et infos du téléphone: Réussite
+  * Contacts et journaux d'appels: Echec
+* S9+ (Android 9)
   * SMS et MMS, applications et infos du téléphone: Réussite
   * Contacts et journaux d'appels: Echec
   
-### Huawei
-* Huawei Mate 9: Extraction complète réussie
+#### Huawei
+* Huawei Mate 9 (Android 8): Extraction complète réussite
+* Huawei Mate 9 (Android 9):
+  * SMS et MMS, applications et infos du téléphone: Réussite
+  * Contacts et journaux d'appels: Echec
 
-### Autres
-* Umidigi S2 Lite: Extraction complète réussie  
+#### Autres
+* Umidigi S2 Lite (Android 7): Extraction complète réussite  

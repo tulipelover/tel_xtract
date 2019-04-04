@@ -15,6 +15,8 @@ import time
 import json
 import base64
 import webbrowser
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 
 # Get the starting application time
 start_time = time.time()
@@ -118,6 +120,9 @@ app_icon = data_dict['app_icon']['app_icon'].encode('ascii')
 # Define PySImpleGUI parameters
 sg.ChangeLookAndFeel('Topanga')
 sg.SetOptions(icon=app_icon)
+
+# Define list to store all pictures stored on the phone
+pic_list = list()
 
 # Define csv directory realted paths
 raw_dir = os.path.join(script_dir, 'forensics')
@@ -241,10 +246,12 @@ def get_info():
 
     os.chdir(script_resource_dir)
     apk_path = 'AFLogical-OSE_1.5.2.apk'
+
     # Define destination folder and make it if necessary
     dest_dir = raw_dir
     if not os.path.isdir(dest_dir):
         os.mkdir(dest_dir)
+
     # Start the ADB server and try to install the AFLogical apk
     window = popup_working('démarrage de l\'ADB et détection du téléphone en cours...')
     device = False
@@ -258,6 +265,7 @@ def get_info():
             subprocess.call("adb.exe start-server", shell=True)
         client = AdbClient(host="127.0.0.1", port=5037)
         try:
+
             # Check to make sure only one device is detected by ADB and that the device is correctly detected
             if len(client.devices()) > 1:
                 logging.info('Multiple devices detected by ADB.')
@@ -281,9 +289,11 @@ def get_info():
             logging.exception('An error occured while detecting the phone')
     close_popup(window)
     window = popup_working('Installation du User Agent et récupération des données.')
+
     # Get phone information from adb
     phone_make = device.shell('getprop ro.product.brand').strip()
     phone_model = device.shell('getprop ro.product.model').strip()
+
     # Install the user agent and get info from it
     installed = False
     while not installed:
@@ -308,30 +318,77 @@ def get_info():
 
     # Remove a previously installed forensics folder if it exists
     device.shell('rm -r /mnt/sdcard/forensics')
+
     # Launch the apk on the phone and tell user to click "Capture"
     device.shell('monkey -p com.viaforensics.android.aflogical_ose -c android.intent.category.LAUNCHER 1')
     sg.Popup('Application installée avec succès.\n\nSur le téléphone, bien vouloir appuyer sur "Capture".\n\n'
              'Une fois la procédure d\'extraction des données terminée, cliquez "OK" dans cette fenêtre.')
+
     # List all the files in the forensics folder on the phone and create the paths for the ADB pull
     files = device.shell('cd /mnt/sdcard/forensics/* && ls $PWD/*')
     files = files.split('\n')
     files = [item.strip() for item in files]
     if not files:
         logging.error('There are no files in forensics directory on phone')
-    for item in files:
+    for num, item in enumerate(files):
+        sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments MMS')
         try:
             filename = os.path.basename(item)
             final_path = os.path.join(raw_dir, filename)
             device.pull(item, final_path)
+            path_in_csv_dir = os.path.join(csv_dir_resources, filename)
+            pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
         except FileNotFoundError:
             pass
-    # Clean up the phone and kill server
+
+    # Clean up the phone
     device.uninstall('com.viaforensics.android.aflogical_ose')
     if device.shell('pm list packages | grep com.viaforensics.android.aflogical_ose') != '':
         logging.warning('The user agent was not uninstalled')
     else:
         logging.info('User agent correctly uninstalled')
     device.shell('rm -r /mnt/sdcard/forensics')
+    logging.info('Finished retrieving files from forenscis folder')
+
+    # List all the files in the DCIM folder on the phone and create the paths for the ADB pull
+    logging.info('Starting to retrieve all elements from DCIM')
+    files = device.shell('cd $EXTERNAL_STORAGE/DCIM && find "$PWD" -type f')
+    files = files.split('\n')
+    files = [item.strip() for item in files]
+    if not files:
+        logging.error('There are no items in DCIM directory on phone')
+    for num, item in enumerate(files):
+        sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments DCIM')
+        try:
+            filename = os.path.basename(item)
+            final_path = os.path.join(raw_dir, filename)
+            device.pull(item, final_path)
+            path_in_csv_dir = os.path.join(csv_dir_resources, filename)
+            pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
+        except FileNotFoundError:
+            pass
+    logging.info('Finished retrieving elements from DCIM folder')
+
+    # List all the files in the Pictures folder on the phone and create the paths for the ADB pull
+    logging.info('Starting to retrieve all elements from Pictures')
+    files = device.shell('cd $EXTERNAL_STORAGE/Pictures && find "$PWD" -type f')
+    files = files.split('\n')
+    files = [item.strip() for item in files]
+    if not files:
+        logging.error('There are no items in Pictures directory on phone')
+    for num, item in enumerate(files):
+        sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments dans Pictures')
+        try:
+            filename = os.path.basename(item)
+            final_path = os.path.join(raw_dir, filename)
+            device.pull(item, final_path)
+            path_in_csv_dir = os.path.join(csv_dir_resources, filename)
+            pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
+        except FileNotFoundError:
+            pass
+    logging.info('Finished retrieving elements from Pictures')
+
+    # Kill ADB server
     subprocess.call("adb.exe kill-server", shell=True)
     logging.info('Killing ADB server')
     close_popup(window)
@@ -934,6 +991,66 @@ def get_all_numbers_communicated(call_logs_data, sms_data, mms_data):
     logging.info('Finished gathering all the phone numbers and writing them to file')
 
 
+def get_pic_exifdata():
+    """Get the exif data for each image and append it to each image in pic_list"""
+
+    def process_gps_coords(coord):
+        """Process GPS coordinates"""
+        coord_deg = 0
+        for count, values in enumerate(coord):
+            coord_deg += (float(values[0]) / values[1]) / 60 ** count
+        return coord_deg
+
+    def format_gps_data(gps_data_dict):
+        """Format GPS data into human readable decimal GPS coordinates"""
+
+        # Format GPS data
+        raw_gps_dict = {}
+        for key, value in gps_data_dict.items():
+            decode = GPSTAGS.get(key, key)
+            raw_gps_dict[decode] = value
+
+        # Get the latitude GPS data in decimal form
+        latitude = process_gps_coords(raw_gps_dict['GPSLatitude'])
+        latitude_ref = raw_gps_dict['GPSLatitudeRef'] == u'N'
+        if not latitude_ref:
+            latitude = latitude * -1
+
+        # Get the longitude GPS data in decimal form
+        longitude = process_gps_coords(raw_gps_dict['GPSLongitude'])
+        longitude_ref = raw_gps_dict['GPSLongitudeRef'] == u'E'
+        if not longitude_ref:
+            longitude = longitude * -1
+        if latitude == 0 and longitude == 0:
+            return ''
+        gps_data = '{} {}'.format(longitude, latitude)
+        return gps_data
+
+    logging.info('Starting to extract exif data from images')
+    for root, _, filenames in os.walk(csv_dir_resources):
+        for filename in filenames:
+            fpath = os.path.join(root, filename)
+            try:
+                im = Image.open(fpath)
+                exif = im.getexif()
+                exif_data = dict()
+                for name, value in exif.items():
+                    tag = TAGS.get(name, name)
+                    if tag == 'GPSInfo':
+                        try:
+                            value = format_gps_data(value)
+                        except KeyError:
+                            continue
+                    if 'Date' in tag:
+                        value = datetime.strptime(value, '%Y:%m:%d %H:%M:%S').strftime('%d/%m/%Y %H:%M:%S')
+                    value = value.replace('\n', '').replace('\0', '') if isinstance(value, str) else value
+                    exif_data[tag] = value
+            except:
+                logging.exception('Could not retrieve exif data for {}'.format(fpath))
+                continue
+    logging.info('Finished retrieving all the exif data')
+
+
 def generate_html(file_content, title, type='table', page='default', extra_data=dict()):
     """Create the HTML report files"""
 
@@ -1080,9 +1197,9 @@ def main():
     """Main script function"""
 
     values = tel_xtract_gui()
-    # phone_make, phone_model = get_info()
-    phone_make = 'a'
-    phone_model = 'a'
+    phone_make, phone_model = get_info()
+    # phone_make = 'a'
+    # phone_model = 'a'
     case_data = prepare_case_data(values, phone_make, phone_model)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
