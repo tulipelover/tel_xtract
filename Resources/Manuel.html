@@ -10,7 +10,10 @@ Ce logiciel n’a pas pour but de concurrencer les solutions payantes de grosses
 d'extraire de manière forensique les données élémentaires d'un téléphone et ce avec le moins d'effort possible de la 
 part de l'utilisateur. <br />
 Le résultat de l'exploitation est un dossier contenant des fichiers au format CSV facilement exploitables par d'autres 
-outils et un rapport au format HTML. Ce dernier reprend toutes les données contenues dans ces fichiers CSV.</p>
+outils et un rapport au format HTML. <br />
+A l'heure actuelle, le logiciel arrive, dans le plupart des cas, à extraire, les contacts, les journaux d'appels, les 
+applications, les SMS, les MMS et les images contenues dans les dossiers "DCIM" et "Pictures". Avec le temps, ce 
+programme tentera d'extraire de plus en plus de données.</p>
 
 <h2>Installation</h2>
 
@@ -28,7 +31,7 @@ différentes).</p>
 
 <p>Pour démarrer le programme, il suffit d’exécuter le fichier <strong><em>tel</em>xtract.bat_</strong>. Cette action fera apparaître 
 une interface graphique vous demandant de renseigner des informations en lien avec le dossier en cours. Il s'agira
-ensuite de choisir si la création d'un rapport au format HTML est souhaitée (tous les renseignements concernant le
+ensuite de choisir si l'extraction des images contenues dans le DCIM et dans le dossier Pictures est souhaitée (tous les renseignements concernant le
 dossier sont optionnels). Cliquer ensuite sur "Valider" pour lancer l'extraction. <br />
 Une fois l'extraction lancée, le déroulé des différentes étapes s'affiche en haut à gauche de l'écran dans un bandeau
 noir. Cette information vous permet de vous situer par rapport à l'avancée de l'extraction. Il suffit ensuite de se 
@@ -47,8 +50,7 @@ les erreurs survenues lors de l'extraction.</p>
 
 <h4>Fichiers CSV</h4>
 
-<p>Ce dossier sera créé peu importe les options choisies dans l'interface graphique. Si l'extraction est entièrement 
-réussie, vous trouverez dans ce dossier les éléments suivants:
+<p>Si l'extraction est entièrement réussie, vous trouverez dans ce dossier les éléments suivants:
 * <strong>Resources/</strong>: Dossier contenant tous les éléments MMS extraits du téléphone.
 * <strong>CallLog Calls.csv</strong>:  Contient toutes les données des journaux d'appels. <br />
 * <strong>Contacts Phones.csv</strong>: Contient toutes les données des contacts stockés physiquement sur le téléphone. <br />
@@ -61,8 +63,7 @@ réussie, vous trouverez dans ce dossier les éléments suivants:
 
 <h4>Rapport HTML</h4>
 
-<p>Ce dossier sera créé si la case "Rapport" est cochée dans l'interface graphique. Si l'extraction est entièrement 
-réussie, vous trouverez dans ce dossier les éléments suivants:
+<p>Si l'extraction est entièrement réussie, vous trouverez dans ce dossier les éléments suivants:
 * <strong>Internal</strong>: Dossier contenant tous les fichiers nécessaires à l'affichage des icônes du rapport HTML.
 * <strong>Resources</strong>: Dossier contenant tous les éléments MMS extraits du téléphone.
 * <strong>Applications.html</strong>: Fichier HTML contenant la liste des applications extraites du téléphone.
@@ -72,7 +73,9 @@ rapport.
 * <strong>Infos Tel.html</strong>: Fichier HTML contenant les informations propres au téléphone.
 * <strong>Journaux d'Appels.html</strong>: Fichier HTML contenant les journaux d'appels du téléphone.
 * <strong>MMS.html</strong>: Fichier HTML contenant la liste des MMS extraits ainsi que leur pièce(s) jointes(s).
-* <strong>SMS.html</strong>: Fichier HTML contenant la liste des MMS extraits.</p>
+* <strong>SMS.html</strong>: Fichier HTML contenant la liste des MMS extraits.
+* <strong>Images.html</strong>: Fichier HTML contenant la liste de toutes les images extraites. Cette page ne sera présente que si 
+l'option "Extraire les images" est cochée sur l'interface graphique.</p>
 
 <h2>Contribution</h2>
 
@@ -93,7 +96,7 @@ l'avertissement s'impose.</p>
 
 <p><strong>Q</strong>: Le programme ne démarre pas, que faire? <br />
 <strong>R</strong>: L'application ne nécessite aucun module ou programme externe pour fonctionner. Toutes les composantes nécessaires
-sont fournies dans le zip. Il peut cependant arriver que les antivirus n'apprécient pas forcément l'ADB. Dans ce cas,
+sont fournies dans le zip. Il peut cependant arriver que les antivirus n'apprécient pas l'ADB. Dans ce cas,
 il faudra soit ajouter une exception à votre antivirus, soit le désactiver le temps de l'extraction.  </p>
 
 <p><strong>Q</strong>: L'extraction s'est bien déroulée, j'ai tous mes fichiers dans les dossier "Résultats", "Fichiers CSV" et

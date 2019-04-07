@@ -172,9 +172,13 @@ mms = 'MMS.html'
 index = 'Index.html'
 apps = 'Applications.html'
 tel_info = 'Infos Tel.html'
+images = 'Images.html'
 
 # Define all numbers communicated file path
 num_list_file = os.path.join(csv_dir, 'Numéros_comm.csv')
+
+# Define the extraction summary list
+summary_list = list()
 
 logging.info('Finished defining variables')
 
@@ -193,9 +197,10 @@ def tel_xtract_gui():
               [sg.T('{}'.format('-' * 115))],
               [sg.T('Etapes à suivre:', font='Any 10 underline')],
               [sg.T('1. Activer les options développeur et le débogage USB sur le téléphone.')],
-              [sg.T('2. Cocher la case "Rapport" si ce dernier est souhaité.')],
-              [sg.T('3. Si le téléphone n\'est pas reconnu par l\'ADB, le programme vous le dira.')],
-              [sg.Checkbox('Rapport', key='report')],
+              [sg.T('2. Si le téléphone n\'est pas reconnu par l\'ADB, le programme vous le dira.')],
+              [sg.T('3. Se laisser guider par le programme.')],
+              [sg.T('4. Exploiter les résultats et vérifier le fichier log pour d\'éventuelles erreurs.')],
+              [sg.Checkbox('Extraction des images', key='images')],
               [sg.T('ATTENTION: Bien vouloir s\'assurer qu\'un seul téléphone est branché', font='Any 10 bold')],
               [sg.T('{}'.format(' ' * 85)), sg.T('Licence', key='license', enable_events=True, justification='right', font='Any 7', text_color='blue'), sg.T('Manuel', key='manual', enable_events=True, justification='right', font='Any 7', text_color='blue')],
               [sg.Button('Valider', key='ok'), sg.Button('Quitter', key='quit')]]
@@ -241,7 +246,7 @@ def close_popup(window):
     window.Close()
 
 
-def get_info():
+def get_info(values):
     """Install user agent, retrieve info and uninstall agent"""
 
     os.chdir(script_resource_dir)
@@ -336,8 +341,9 @@ def get_info():
             filename = os.path.basename(item)
             final_path = os.path.join(raw_dir, filename)
             device.pull(item, final_path)
-            path_in_csv_dir = os.path.join(csv_dir_resources, filename)
-            pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
+            if item not in raw_forensic_file_list:
+                path_in_csv_dir = os.path.join(csv_dir_resources, filename)
+                pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
         except FileNotFoundError:
             pass
 
@@ -351,42 +357,47 @@ def get_info():
     logging.info('Finished retrieving files from forenscis folder')
 
     # List all the files in the DCIM folder on the phone and create the paths for the ADB pull
-    logging.info('Starting to retrieve all elements from DCIM')
-    files = device.shell('cd $EXTERNAL_STORAGE/DCIM && find "$PWD" -type f')
-    files = files.split('\n')
-    files = [item.strip() for item in files]
-    if not files:
-        logging.error('There are no items in DCIM directory on phone')
-    for num, item in enumerate(files):
-        sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments DCIM')
-        try:
-            filename = os.path.basename(item)
-            final_path = os.path.join(raw_dir, filename)
-            device.pull(item, final_path)
-            path_in_csv_dir = os.path.join(csv_dir_resources, filename)
-            pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
-        except FileNotFoundError:
+    if values['images']:
+        logging.info('Starting to retrieve all elements from DCIM')
+        files = device.shell('cd $EXTERNAL_STORAGE/DCIM && find "$PWD" -type f')
+        files = files.split('\n')
+        files = [item.strip() for item in files]
+        if not files:
+            logging.error('There are no items in DCIM directory on phone')
             pass
-    logging.info('Finished retrieving elements from DCIM folder')
+        else:
+            for num, item in enumerate(files):
+                sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments DCIM')
+                try:
+                    filename = os.path.basename(item)
+                    final_path = os.path.join(raw_dir, filename)
+                    device.pull(item, final_path)
+                    path_in_csv_dir = os.path.join(csv_dir_resources, filename)
+                    pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
+                except FileNotFoundError:
+                    pass
+        logging.info('Finished retrieving elements from DCIM folder')
 
-    # List all the files in the Pictures folder on the phone and create the paths for the ADB pull
-    logging.info('Starting to retrieve all elements from Pictures')
-    files = device.shell('cd $EXTERNAL_STORAGE/Pictures && find "$PWD" -type f')
-    files = files.split('\n')
-    files = [item.strip() for item in files]
-    if not files:
-        logging.error('There are no items in Pictures directory on phone')
-    for num, item in enumerate(files):
-        sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments dans Pictures')
-        try:
-            filename = os.path.basename(item)
-            final_path = os.path.join(raw_dir, filename)
-            device.pull(item, final_path)
-            path_in_csv_dir = os.path.join(csv_dir_resources, filename)
-            pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
-        except FileNotFoundError:
+        # List all the files in the Pictures folder on the phone and create the paths for the ADB pull
+        logging.info('Starting to retrieve all elements from Pictures')
+        files = device.shell('cd $EXTERNAL_STORAGE/Pictures && find "$PWD" -type f')
+        files = files.split('\n')
+        files = [item.strip() for item in files]
+        if not files:
+            logging.error('There are no items in Pictures directory on phone')
             pass
-    logging.info('Finished retrieving elements from Pictures')
+        else:
+            for num, item in enumerate(files):
+                sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments dans Pictures')
+                try:
+                    filename = os.path.basename(item)
+                    final_path = os.path.join(raw_dir, filename)
+                    device.pull(item, final_path)
+                    path_in_csv_dir = os.path.join(csv_dir_resources, filename)
+                    pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
+                except FileNotFoundError:
+                    pass
+        logging.info('Finished retrieving elements from Pictures')
 
     # Kill ADB server
     subprocess.call("adb.exe kill-server", shell=True)
@@ -462,16 +473,15 @@ def prepare_data(values, case_data):
     os.mkdir(csv_dir)
     os.mkdir(csv_dir_resources)
     # Create report directories and support files if the option was chosen
-    if values['report']:
-        os.mkdir(report_dir)
-        os.mkdir(html_resource_dir)
-        os.mkdir(html_internal_dir)
-        for key, value in data_dict['report_images'].items():
-            file_path = os.path.join(html_internal_dir, key)
-            byte_value = value.encode('ascii')
-            binary_value = base64.b64decode(byte_value)
-            with open(file_path, 'wb') as f:
-                f.write(binary_value)
+    os.mkdir(report_dir)
+    os.mkdir(html_resource_dir)
+    os.mkdir(html_internal_dir)
+    for key, value in data_dict['report_images'].items():
+        file_path = os.path.join(html_internal_dir, key)
+        byte_value = value.encode('ascii')
+        binary_value = base64.b64decode(byte_value)
+        with open(file_path, 'wb') as f:
+            f.write(binary_value)
     # Change dates for each file then save the new csv file
     try:
         change_date(raw_call_log, call_log_final)
@@ -521,12 +531,12 @@ def prepare_data(values, case_data):
 
     # Copy all non forensics files
     for root, _, files in os.walk(raw_dir):
-        for filename in files:
+        for num, filename in enumerate(files):
+            sg.OneLineProgressMeter('Copy', num + 1, len(files), 'key', 'Copie des fichiers')
             full_path = os.path.join(root, filename)
             if full_path not in raw_forensic_file_list:
-                if values['report']:
-                    new_path = os.path.join(html_resource_dir, filename)
-                    shutil.copy2(full_path, new_path)
+                new_path = os.path.join(html_resource_dir, filename)
+                shutil.copy2(full_path, new_path)
                 new_path = os.path.join(csv_dir_resources, filename)
                 shutil.copy2(full_path, new_path)
 
@@ -555,9 +565,6 @@ def extract_data(case_data):
 
     # Define number:name dictionnary
     id_dict = dict()
-
-    # Define the extraction summary list
-    summary_list = list()
     
     # Get phone info and apps
     logging.info('Starting phone information and application information extraction')
@@ -991,7 +998,7 @@ def get_all_numbers_communicated(call_logs_data, sms_data, mms_data):
     logging.info('Finished gathering all the phone numbers and writing them to file')
 
 
-def get_pic_exifdata():
+def get_pic_exifdata(case_data):
     """Get the exif data for each image and append it to each image in pic_list"""
 
     def process_gps_coords(coord):
@@ -1027,15 +1034,31 @@ def get_pic_exifdata():
         return gps_data
 
     logging.info('Starting to extract exif data from images')
-    for root, _, filenames in os.walk(csv_dir_resources):
-        for filename in filenames:
-            fpath = os.path.join(root, filename)
-            try:
-                im = Image.open(fpath)
-                exif = im.getexif()
-                exif_data = dict()
-                for name, value in exif.items():
-                    tag = TAGS.get(name, name)
+
+    # Extract all exif data from the images (will also detect which files are not images)
+    exifdata_category_list = [
+        'Filename',
+        'DateTime',
+        'DateTimeDigitized',
+        'DateTimeOriginal',
+        'Make',
+        'Model',
+        'GPSInfo',
+        'LensMake',
+        'LensModel',
+        'Software'
+    ]
+
+    for i, image in enumerate(pic_list, 0):
+        sg.OneLineProgressMeter('Exif', i + 1, len(pic_list), 'key', 'Extraction des données exif des images')
+        # Try to extract exif data from the file
+        try:
+            im = Image.open(image['csv_fpath'])
+            exif = im.getexif()
+            exif_data = dict()
+            for name, value in exif.items():
+                tag = TAGS.get(name, name)
+                if tag in exifdata_category_list:
                     if tag == 'GPSInfo':
                         try:
                             value = format_gps_data(value)
@@ -1045,13 +1068,38 @@ def get_pic_exifdata():
                         value = datetime.strptime(value, '%Y:%m:%d %H:%M:%S').strftime('%d/%m/%Y %H:%M:%S')
                     value = value.replace('\n', '').replace('\0', '') if isinstance(value, str) else value
                     exif_data[tag] = value
-            except:
-                logging.exception('Could not retrieve exif data for {}'.format(fpath))
-                continue
+
+            # Associate string formatted exif data with it's corresponding image
+            formatted_exif = str()
+            for key, value in exif_data.items():
+                formatted_exif += '{}: {}<br />'.format(key, value)
+            image['exif'] = formatted_exif
+
+        # If Image.open cannot open the file then it is not an image, remove it from list
+        except:
+            del pic_list[i]
+            continue
     logging.info('Finished retrieving all the exif data')
 
+    # Now that image data is complete, format it into a list for HTML report
+    final_pic_list = list()
+    for image in pic_list:
+        basename = os.path.basename(image['csv_fpath'])
+        html_path = os.path.join('Resources', basename)
+        html_image_path = '<a href="{0}" target="_blank"><img src="{0}" width="100" height="100" title="{0}" onerror="this.src=\'{1}\'"></a>'.format(html_path, file_not_found_rel_path,)
+        try:
+            formatted_list = [html_image_path, image['phone_fpath'], image['exif']]
+        except KeyError:
+            formatted_list = [image['phone_fpath'], html_image_path, 'Aucune information exif n\'a été trouvée']
+        final_pic_list.append(formatted_list)
+    final_pic_list.sort(key=lambda x: x[1])
+    final_pic_list.insert(0, ['Cheminement Sur le Téléphone', 'Image', ''])
 
-def generate_html(file_content, title, type='table', page='default', extra_data=dict()):
+    case_data['summary'].insert(len(case_data['summary']) - 1, ['<a href="{}">Images</a>'.format(images), len(final_pic_list)])
+    return final_pic_list
+
+
+def generate_html(file_content, title, values, type='table', page='default', extra_data=dict()):
     """Create the HTML report files"""
 
     def make_html_element(type, content='', link_name='', image_width='100', image_height='100', link_target='_blank'):
@@ -1086,6 +1134,7 @@ def generate_html(file_content, title, type='table', page='default', extra_data=
                 if count == 0:
                     table_list.append('<thead>')
                     table_list.append('<tr>')
+                    column_index = 0
                     for item in row:
                         table_list.append('<th>{}</th>'.format(item))
                     table_list.append('</tr>')
@@ -1128,6 +1177,7 @@ def generate_html(file_content, title, type='table', page='default', extra_data=
         with open(filename, 'w', encoding='utf8') as f:
             f.write('\n'.join(html_list))
 
+    # Start generating HTML file
     logging.info('Starting to generate HTML report for {}'.format(title))
     # Define paths to create the html file
     html_filename = title + '.html'
@@ -1145,6 +1195,8 @@ def generate_html(file_content, title, type='table', page='default', extra_data=
         make_html_element('link', call_logs, link_name='Journaux d\'Appels', link_target='')
         make_html_element('link', sms, link_name='SMS', link_target='')
         make_html_element('link', mms, link_name='MMS', link_target='')
+        if values['images']:
+            make_html_element('link', images, link_name='Images', link_target='')
         make_html_element('link', apps, link_name='Applications', link_target='')
         html_list.append('</div>')
         html_list.append('<div class="column middle">')
@@ -1197,23 +1249,25 @@ def main():
     """Main script function"""
 
     values = tel_xtract_gui()
-    phone_make, phone_model = get_info()
+    phone_make, phone_model = get_info(values)
     # phone_make = 'a'
     # phone_model = 'a'
     case_data = prepare_case_data(values, phone_make, phone_model)
     prepare_data(values, case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
     get_all_numbers_communicated(call_logs_data, sms_data, mms_data)
-    if values['report']:
-        window = popup_working('Création du rapport')
-        generate_html('', 'Index', page='index', extra_data=case_data)
-        generate_html(tel_data, 'Infos Tel')
-        generate_html(contact_data, 'Contacts')
-        generate_html(call_logs_data, 'Journaux d\'Appels')
-        generate_html(sms_data, 'SMS')
-        generate_html(program_data, 'Applications')
-        generate_html(mms_data, 'MMS')
-        close_popup(window)
+    window = popup_working('Création du rapport')
+    if values['images']:
+        pic_data = get_pic_exifdata(case_data)
+        generate_html(pic_data, 'Images', values)
+    generate_html('', 'Index', values, page='index', extra_data=case_data)
+    generate_html(tel_data, 'Infos Tel', values)
+    generate_html(contact_data, 'Contacts', values)
+    generate_html(call_logs_data, 'Journaux d\'Appels', values)
+    generate_html(sms_data, 'SMS', values)
+    generate_html(program_data, 'Applications', values)
+    generate_html(mms_data, 'MMS', values)
+    close_popup(window)
     # cleanup()
     logging.info('Program finished executing. Exiting.')
     # Define the application finish time and log the total runtime
