@@ -374,7 +374,8 @@ def get_info(values):
                     device.pull(item, final_path)
                     path_in_csv_dir = os.path.join(csv_dir_resources, filename)
                     pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
-                except FileNotFoundError:
+                except:
+                    logging.exception('There was an error retrieving {}'.format(item))
                     pass
         logging.info('Finished retrieving elements from DCIM folder')
 
@@ -395,7 +396,8 @@ def get_info(values):
                     device.pull(item, final_path)
                     path_in_csv_dir = os.path.join(csv_dir_resources, filename)
                     pic_list.append({'phone_fpath': item, 'csv_fpath': path_in_csv_dir})
-                except FileNotFoundError:
+                except:
+                    logging.exception('There was an error retrieving {}'.format(item))
                     pass
         logging.info('Finished retrieving elements from Pictures')
 
@@ -428,7 +430,7 @@ def prepare_case_data(values, phone_make, phone_model):
     return extra_data_dict
 
 
-def prepare_data(values, case_data):
+def prepare_data(case_data):
     """Prepare all the files for examination"""
 
     def change_date(old_file, new_file):
@@ -1253,7 +1255,7 @@ def main():
     # phone_make = 'a'
     # phone_model = 'a'
     case_data = prepare_case_data(values, phone_make, phone_model)
-    prepare_data(values, case_data)
+    prepare_data(case_data)
     contact_data, call_logs_data, sms_data, program_data, tel_data, mms_data, case_data = extract_data(case_data)
     get_all_numbers_communicated(call_logs_data, sms_data, mms_data)
     window = popup_working('Création du rapport')
