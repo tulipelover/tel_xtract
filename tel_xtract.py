@@ -250,7 +250,7 @@ def get_info(values):
     """Install user agent, retrieve info and uninstall agent"""
 
     os.chdir(script_resource_dir)
-    apk_path = 'AFLogical-OSE_1.5.2.apk'
+    apk_path = 'User_Agent.apk'
 
     # Define destination folder and make it if necessary
     dest_dir = raw_dir
@@ -326,8 +326,8 @@ def get_info(values):
 
     # Launch the apk on the phone and tell user to click "Capture"
     device.shell('monkey -p com.viaforensics.android.aflogical_ose -c android.intent.category.LAUNCHER 1')
-    sg.Popup('Application installée avec succès.\n\nSur le téléphone, bien vouloir appuyer sur "Capture".\n\n'
-             'Une fois la procédure d\'extraction des données terminée, cliquez "OK" dans cette fenêtre.')
+    sg.Popup('Application installée avec succès.\n\nUne fois la procédure d\'extraction des données terminée, cliquez '
+             '"OK" dans cette fenêtre.')
 
     # List all the files in the forensics folder on the phone and create the paths for the ADB pull
     files = device.shell('cd /mnt/sdcard/forensics/* && ls $PWD/*')
@@ -370,6 +370,8 @@ def get_info(values):
                 sg.OneLineProgressMeter('Extraction', num + 1, len(files), 'key', 'Extraction des éléments DCIM')
                 try:
                     filename = os.path.basename(item)
+                    if filename == '':
+                        continue
                     final_path = os.path.join(raw_dir, filename)
                     device.pull(item, final_path)
                     path_in_csv_dir = os.path.join(csv_dir_resources, filename)
@@ -758,6 +760,7 @@ def extract_data(case_data):
                                 else:
                                     info_list.append(value1)
                             elif key == 'address':
+                                value = value.replace(' ', '')
                                 if value in id_dict.keys():
                                     info_list.append(id_dict[value])
                                     info_list.append(value)
@@ -1074,7 +1077,10 @@ def get_pic_exifdata(case_data):
             # Associate string formatted exif data with it's corresponding image
             formatted_exif = str()
             for key, value in exif_data.items():
-                formatted_exif += '{}: {}<br />'.format(key, value)
+                if (len(exif_data) == 1 and exif_data['GPSInfo'] == '') or len(exif_data) == 0:
+                    formatted_exif = 'Aucune information exif n\'a été trouvée'
+                else:
+                    formatted_exif += '{}: {}<br />'.format(key, value)
             image['exif'] = formatted_exif
 
         # If Image.open cannot open the file then it is not an image, remove it from list
@@ -1092,7 +1098,7 @@ def get_pic_exifdata(case_data):
         try:
             formatted_list = [html_image_path, image['phone_fpath'], image['exif']]
         except KeyError:
-            formatted_list = [image['phone_fpath'], html_image_path, 'Aucune information exif n\'a été trouvée']
+            formatted_list = [html_image_path, image['phone_fpath'], 'Aucune information exif n\'a été trouvée']
         final_pic_list.append(formatted_list)
     final_pic_list.sort(key=lambda x: x[1])
     final_pic_list.insert(0, ['Cheminement Sur le Téléphone', 'Image', ''])
@@ -1184,25 +1190,25 @@ def generate_html(file_content, title, values, type='table', page='default', ext
     # Define paths to create the html file
     html_filename = title + '.html'
     current_html_path = os.path.join(report_dir, html_filename)
-    try:
-        global html_list
-        del html_list
-        html_list = list()
-        html_list.append('<div class="column left">')
-        make_html_element('image', index_image_path, image_width='150', image_height='150')
-        make_html_element('h2', 'Index')
-        make_html_element('link', index, link_name='Page d\'Accueil', link_target='')
-        make_html_element('link', tel_info, link_name='Infos Tel', link_target='')
-        make_html_element('link', contacts, link_name='Contacts', link_target='')
-        make_html_element('link', call_logs, link_name='Journaux d\'Appels', link_target='')
-        make_html_element('link', sms, link_name='SMS', link_target='')
-        make_html_element('link', mms, link_name='MMS', link_target='')
-        if values['images']:
-            make_html_element('link', images, link_name='Images', link_target='')
-        make_html_element('link', apps, link_name='Applications', link_target='')
-        html_list.append('</div>')
-        html_list.append('<div class="column middle">')
+    global html_list
+    del html_list
+    html_list = list()
+    html_list.append('<div class="column left">')
+    make_html_element('image', index_image_path, image_width='150', image_height='150')
+    make_html_element('h2', 'Index')
+    make_html_element('link', index, link_name='Page d\'Accueil', link_target='')
+    make_html_element('link', tel_info, link_name='Infos Tel', link_target='')
+    make_html_element('link', contacts, link_name='Contacts', link_target='')
+    make_html_element('link', call_logs, link_name='Journaux d\'Appels', link_target='')
+    make_html_element('link', sms, link_name='SMS', link_target='')
+    make_html_element('link', mms, link_name='MMS', link_target='')
+    if values['images']:
+        make_html_element('link', images, link_name='Images', link_target='')
+    make_html_element('link', apps, link_name='Applications', link_target='')
+    html_list.append('</div>')
+    html_list.append('<div class="column middle">')
 
+    try:
         if page == 'index':
             html_list.append('<h1><font size="24"><center>{}</center></font></h1>'.format(title))
             html_list.append('<h1><center>Extraction du téléphone {} modèle {} en date du {}</center></h1>'.format(
@@ -1228,12 +1234,14 @@ def generate_html(file_content, title, values, type='table', page='default', ext
         elif page == 'default':
             make_html_element('h1', title)
             make_html_element(type, file_content)
-        html_list.append('</div>')
-        finalize_html(current_html_path)
-        logging.info('Finished generating {}'.format(current_html_path))
     except:
         logging.exception('Error creating {}'.format(current_html_path))
-        return
+        html_list.append('<h2>Aucun contenu n\'a pu être extrait dans cette catégorie</h2>')
+        pass
+
+    html_list.append('</div>')
+    finalize_html(current_html_path)
+    logging.info('Finished generating {}'.format(current_html_path))
 
 
 def cleanup():
