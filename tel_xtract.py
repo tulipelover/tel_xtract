@@ -307,7 +307,7 @@ def get_info(values):
             installed = True
             logging.info('User agent installed successfully')
         except adb.InstallError:
-            if device.shell('pm list packages | grep com.viaforensics.android.aflogical_ose') == '':
+            if device.shell('pm list packages | grep com.tel_xtract.user_agent') == '':
                 logging.error('The user agent was not installed')
                 event = sg.PopupYesNo('Le User Agent ne s\'est pas installé.\nVérifiez les paramétrages du téléphone.\n'
                                       'Souhaitez-vous réessayer?')
@@ -325,12 +325,13 @@ def get_info(values):
     device.shell('rm -r /mnt/sdcard/forensics')
 
     # Launch the apk on the phone and tell user to click "Capture"
-    device.shell('monkey -p com.viaforensics.android.aflogical_ose -c android.intent.category.LAUNCHER 1')
+    device.shell('monkey -p com.tel_xtract.user_agent -c android.intent.category.LAUNCHER 1')
     sg.Popup('Application installée avec succès.\n\nUne fois la procédure d\'extraction des données terminée, cliquez '
              '"OK" dans cette fenêtre.')
 
     # List all the files in the forensics folder on the phone and create the paths for the ADB pull
-    files = device.shell('cd /mnt/sdcard/forensics/* && ls $PWD/*')
+    files = device.shell('cd $EXTERNAL_STORAGE/forensics && find "$PWD" -type f')
+    print(files)
     files = files.split('\n')
     files = [item.strip() for item in files]
     if not files:
@@ -348,8 +349,8 @@ def get_info(values):
             pass
 
     # Clean up the phone
-    device.uninstall('com.viaforensics.android.aflogical_ose')
-    if device.shell('pm list packages | grep com.viaforensics.android.aflogical_ose') != '':
+    device.uninstall('com.tel_xtract.user_agent')
+    if device.shell('pm list packages | grep com.tel_xtract.user_agent') != '':
         logging.warning('The user agent was not uninstalled')
     else:
         logging.info('User agent correctly uninstalled')
@@ -581,25 +582,25 @@ def extract_data(case_data):
         info_tel.append(['Marque', case_data['brand_tel']])
         info_tel.append(['Modèle', case_data['model_tel']])
         # Get phone info from info.xml
-        for donnee in fichier_info.xpath("/android-forensics/IMSI"):
+        for donnee in fichier_info.xpath("/user_agent-forensics/IMSI"):
             imsi = str(donnee.text)
             info_tel.append(['ISMI', imsi])
-        for donnee in fichier_info.xpath("/android-forensics/IMEI-MEID"):
+        for donnee in fichier_info.xpath("/user_agent-forensics/IMEI-MEID"):
             imei = str(donnee.text)
             info_tel.append(['IMEI', imei])
-        for donnee in fichier_info.xpath("/android-forensics/MSISDN-MDN"):
+        for donnee in fichier_info.xpath("/user_agent-forensics/MSISDN-MDN"):
             msisdn = str(donnee.text)
             info_tel.append(['MSISDN', msisdn])
-        for donnee in fichier_info.xpath("/android-forensics/ICCID"):
+        for donnee in fichier_info.xpath("/user_agent-forensics/ICCID"):
             iccid = str(donnee.text)
             info_tel.append(['ICCID', iccid])
-        for donnee in fichier_info.xpath("/android-forensics/build/version.release"):
+        for donnee in fichier_info.xpath("/user_agent-forensics/build/version.release"):
             android_version = str(donnee.text)
             info_tel.append(['Version d\'ANDROID', android_version])
         info_tel.insert(0, ['Catégorie', 'Valeur'])
 
         # Get apps list
-        for application in fichier_info.xpath("/android-forensics/applications/app"):
+        for application in fichier_info.xpath("/user_agent-forensics/applications/app"):
             for repertoire in application.xpath("sourceDir"):
                 if repertoire.text.split('/')[1] == "data":
                     info_list = list()
@@ -620,7 +621,7 @@ def extract_data(case_data):
         programs_list = ['']
         pass
 
-    summary_list.append(['<a href="{}">Applications</a>'.format(apps), str(len(programs_list))])
+    summary_list.append(['<a href="{}">Applications</a>'.format(apps), str(len(programs_list) - 1)])
     close_popup(window)
     logging.info('Finished parsing phone information and application information')
 
