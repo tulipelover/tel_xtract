@@ -350,7 +350,7 @@ def get_info(values):
 
     # Clean up the phone
     device.uninstall('com.tel_xtract.user_agent')
-    if device.shell('pm list packages | grep com.tel_xtract.user_agent') != '':
+    if device.shell('pm list packages | grep com.tel_xtract.user_aggent') != '':
         logging.warning('The user agent was not uninstalled')
     else:
         logging.info('User agent correctly uninstalled')
