@@ -106,17 +106,19 @@ plus grand nombre.
 ## Téléphones Testés et Problèmes Connus
 ### Problèmes connus
 Support pour Android 9 ajouté. Les téléphones déjà testés sous Android 9 et qui causaient problème vont être retestés.  
-Cette liste sera mise à jour au fur et à mesure des retours "terrains" et des tests effectués.
+Cette liste sera mise à jour au fur et à mesure des retours "terrains" et des tests effectués. Pour le moment, les tests
+montrent que sur certains téléphones sous Android 9, le contacts ne sont pas extraits. Des tests sont en cours pour y 
+remédier.
 
 ### Téléphones testés
 #### Samsung
 * S8 (Android 8): Extraction complète réussie
 * S9 (Android 9)
-  * SMS et MMS, applications et infos du téléphone: Réussite
-  * Contacts et journaux d'appels: Echec
+  * SMS et MMS, applications, journaux d'appels et infos du téléphone: Réussite
+  * Contacts: Echec
 * S9+ (Android 9)
-  * SMS et MMS, applications et infos du téléphone: Réussite
-  * Contacts et journaux d'appels: Echec
+  * SMS et MMS, applications, journaux d'appels et infos du téléphone: Réussite
+  * Contacts: Echec
   
 #### Huawei
 * Huawei Mate 9 (Android 8): Extraction complète réussite
