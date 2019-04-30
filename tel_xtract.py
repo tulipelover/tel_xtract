@@ -302,12 +302,13 @@ def get_info(values):
     # Install the user agent and get info from it
     installed = False
     while not installed:
-        try:
-            device.install(apk_path)
+        return_code = subprocess.call("adb.exe install -d User_Agent.apk", shell=True)
+        print(return_code)
+        if return_code == 0:
             installed = True
             logging.info('User agent installed successfully')
-        except adb.InstallError:
-            if device.shell('pm list packages | grep com.tel_xtract.user_agent') == '':
+        else:
+            if device.shell('pm list packages | grep com.tel_xtract.User_Agent') == '':
                 logging.error('The user agent was not installed')
                 event = sg.PopupYesNo('Le User Agent ne s\'est pas installé.\nVérifiez les paramétrages du téléphone.\n'
                                       'Souhaitez-vous réessayer?')
@@ -331,7 +332,6 @@ def get_info(values):
 
     # List all the files in the forensics folder on the phone and create the paths for the ADB pull
     files = device.shell('cd $EXTERNAL_STORAGE/forensics && find "$PWD" -type f')
-    print(files)
     files = files.split('\n')
     files = [item.strip() for item in files]
     if not files:

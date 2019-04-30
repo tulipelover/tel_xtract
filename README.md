@@ -34,7 +34,7 @@ laisser guider par le programme.
 A la fin du programme, un popup "Terminé!" s'affichera sur l'écran afin de vous signaler la fin de l'extraction
 
 ### Exploitation des résultats
-Le programme peut créer trois types de résultats stockés dans le dossier "Résultats" à la source du programme: 
+Le programme va créer trois types de résultats stockés dans le dossier "Résultats" à la source du programme: 
 un dossier nommé "Fichiers CSV", un dossier nommé 'Rapport HTML' et un fichier "tel_xtract.log".
 
 #### tel_xtract.log
@@ -70,12 +70,8 @@ l'option "Extraire les images" est cochée sur l'interface graphique.
 
 ## Contribution
 Nous ne demandons pas d'argent pour l'avancement de l'application. Cependant, ceux qui souhaitent contribuer au bon 
-développement du programme peuvent nous envoyer le dossier "_forensics_" de l'extraction contenu dans le dossier 
-source de l'application suite à une exploitation.  
-**ATTENTION**: Le dossier "_forensics_" contient toutes les données brutes extraites du téléphone. En contribuant de 
-cette manière vous nous remettez toutes les informations sur votre téléphone. Nous précisons que ces données ont pour 
-seul but l'avancement du développement de l'application et que le contenu sémantique nous importe peu. Cependant, 
-l'avertissement s'impose.
+développement du programme peuvent nous faire parvenir soit via Github soit par tout autre moyen les erreurs rencontrées
+lors de l'extraction de leur téléphone.
 
 ## Licence
 Ce logiciel est fourni sous licence GNU GPL3. Pour plus d'information concernant cette licence, voir le fichier 
