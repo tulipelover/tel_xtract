@@ -108,17 +108,16 @@ remédier.
 
 ### Téléphones testés
 #### Samsung
-* S8 (Android 8): Extraction complète réussie
-* S9 (Android 9)
-  * SMS et MMS, applications, journaux d'appels et infos du téléphone: Réussite
-  * Contacts: Echec
-* S9+ (Android 9)
-  * SMS et MMS, applications, journaux d'appels et infos du téléphone: Réussite
-  * Contacts: Echec
+* Galaxy S4, (Android 5.0.1): Déroulement normal de l'application, aucune donnée extraite.
+* Galaxy S5 (Android 6.0.1): Déroulement normal de l'application, aucune donnée extraite.
+* J6+ (Android 8.1.0): Extraction complète réussie.
+* S8 (Android 8): Extraction complète réussie.
+* S9 (Android 9): Extraction complète réussie.
+* S9+ (Android 9): Extraction complète réussie.
   
 #### Huawei
-* Huawei Mate 9 (Android 8): Extraction complète réussite
-* Huawei Mate 9 (Android 9): Extraction complète réussite
+* Huawei Mate 9 (Android 8): Extraction complète réussie (vérifications à faire au niveau des MMS).
+* Huawei Mate 9 (Android 9): Extraction complète réussie (vérifications à faire au niveau des MMS).
 
 #### Autres
-* Umidigi S2 Lite (Android 7): Extraction complète réussite  
+* Umidigi S2 Lite (Android 7): Extraction complète réussie.
