@@ -303,7 +303,6 @@ def get_info(values):
     installed = False
     while not installed:
         return_code = subprocess.call("adb.exe install -d User_Agent.apk", shell=True)
-        print(return_code)
         if return_code == 0:
             installed = True
             logging.info('User agent installed successfully')
@@ -646,7 +645,7 @@ def extract_data(case_data):
                                     info_list.append('Oui')
                             else:
                                 info_list.append(value)
-                    info_list.insert(0, info_list.pop(len(info_list) - 1))
+                    info_list.insert(0, info_list.pop(1))
                     contact_list.append(info_list)
                     id_dict[row['number'].replace(' ', '')] = row['name']
                 except:
