@@ -17,6 +17,7 @@ import base64
 import webbrowser
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
+import zipfile
 
 # Get the starting application time
 start_time = time.time()
@@ -45,69 +46,63 @@ logging.info('Defining necessary variables')
 html_list = list()
 table_css_style = """
     body {
-      background-color: #CECECE;
-    }
+         background-color: #CECECE;
+         }
+         li:not(:last-child) {
+         margin: 0 0 10px 0;
+         }
+         .column {
+         float: left;
+         padding: 10px;
+         }
+         .left {
+         width: 15%;
+         }
+         .middle {
+         width: 80%;
+         }"""
+datatables_data = """
+<style type="text/css" title="currentStyle">
+         @import "Internal/css/jquery-ui.min.css";
+         @import "Internal/css/jquery.dataTables.min.css";
+         @import "Internal/css/dataTables.jqueryui.min.css";
+         @import "Internal/css/mediaelementplayer.min.css";
+         @import "Internal/css/audio.css";
+         @import "Internal/css/chats.css";
+      </style>
+      
+      <script type="text/javascript" src="Internal/js/jquery.js"></script>
+      <script type="text/javascript" src="Internal/js/jquery-ui.min.js"></script>
+      <script type="text/javascript" src="Internal/js/jquery.dataTablesM.min.js"></script>
+      <script type="text/javascript" src="Internal/js/dataTables-ValFormatted.js"></script>
+      <script type="text/javascript" src="Internal/js/dataTables.colResize.js"></script>
+      <script type="text/javascript" src="Internal/js/jquery.fancybox.js"></script>
+      <script type="text/javascript" src="Internal/js/jquery-ui-sliderAccess.js"></script>
+      <script type="text/javascript" src="Internal/js/mediaelement-and-player.js"></script>
+      <script type="text/javascript" src="Internal/js/lang/fr.js"></script>
+      <script type="text/javascript" src="Internal/js/audio.js"></script>
+      <script type="text/javascript" src="Internal/js/chats.js"></script>
 
-    li:not(:last-child) {
-      margin: 0 0 10px 0;
-    }
-
-    table {
-      border: 3px solid #000000;
-      max-width: 150%;
-      text-align: left;
-      border-collapse: collapse;
-    }
-
-    table td, table th {
-      border: 1px solid #000000;
-      padding: 5px 4px;
-    }
-
-    table tbody td {
-      font-size: 13px;
-    }
-
-    table thead {
-      background: #818181;
-      background: -moz-linear-gradient(top, #a0a0a0 0%, #8d8d8d 66%, #818181 100%);
-      background: -webkit-linear-gradient(top, #a0a0a0 0%, #8d8d8d 66%, #818181 100%);
-      background: linear-gradient(to bottom, #a0a0a0 0%, #8d8d8d 66%, #818181 100%);
-      border-bottom: 3px solid #000000;
-    }
-
-    table thead th {
-      border: 1px solid #000000;
-      padding: 5px 4px;
-      font-size: 15px;
-      font-weight: bold;
-      color: #000000;
-      text-align: left;
-      white-space:nowrap;
-    }
-
-    table tfoot td {
-      font-size: 14px;
-    }
-
-    .column {
-      float: left;
-      padding: 10px;
-    }
-
-    .left {
-      width: 15%;
-    }
-
-    .middle {
-      width: 75%;
-    }
-
-    .row:after {
-      content: "";
-      display: table;
-      clear: both;
-    }"""
+      <script type="text/javascript" class="init">
+		$(document).ready(function() {
+			$('#main').DataTable({
+			'deferRender': true,
+			'scrollX': '100%',
+			'scrollXInner': '100%',
+			'lengthMenu': [ [50, 100, 200, 500, -1], [50, 100, 200, 500, 'Tous'] ],
+			'pagingType': 'full_numbers',
+			'pageLength': 100,
+			'processing': true,
+			'scrollCollapse': true,
+			'scrollY': '550px',
+			'bJQueryUI': true,
+			"columnDefs": [
+				{ "width": "50%", "targets": -1 }
+			]
+			});
+		} );
+		
+	</script>"""
 
 # Get all the necessary images from the data.json file into data_dict
 script_resource_dir = os.path.join(script_dir, 'Resources')
@@ -476,6 +471,7 @@ def prepare_data(case_data):
     window = popup_working('Préparation des fichiers')
     os.mkdir(csv_dir)
     os.mkdir(csv_dir_resources)
+
     # Create report directories and support files if the option was chosen
     os.mkdir(report_dir)
     os.mkdir(html_resource_dir)
@@ -486,6 +482,15 @@ def prepare_data(case_data):
         binary_value = base64.b64decode(byte_value)
         with open(file_path, 'wb') as f:
             f.write(binary_value)
+
+    # Unrar the datatables support files to the HTML internal dir
+    datatables_filename = "datatables.zip"
+    raw_datatables_files_path = os.path.join(script_resource_dir, datatables_filename)
+    final_datatables_files_path = os.path.join(html_internal_dir)
+    zip_ref = zipfile.ZipFile(raw_datatables_files_path, 'r')
+    zip_ref.extractall(final_datatables_files_path)
+    zip_ref.close()
+
     # Change dates for each file then save the new csv file
     try:
         change_date(raw_call_log, call_log_final)
@@ -569,7 +574,7 @@ def extract_data(case_data):
 
     # Define number:name dictionnary
     id_dict = dict()
-    
+
     # Get phone info and apps
     logging.info('Starting phone information and application information extraction')
     window = popup_working('Lecture des informations du téléphone et des applications')
@@ -1125,7 +1130,7 @@ def generate_html(file_content, title, values, type='table', page='default', ext
             html_list.append('<h2>{}</h2>'.format(content))
         elif type == 'table':
             table_list = list()
-            table_list.append('<table>')
+            table_list.append('<table id="main" class="cell-border" cellspacing="0">')
             count = 0
             for row in content:
                 # Check of body contains background color and extract it
@@ -1152,7 +1157,7 @@ def generate_html(file_content, title, values, type='table', page='default', ext
                 else:
                     table_list.append('<tr style="background-color: {};">'.format(bg_color))
                     for item in row:
-                        table_list.append('<td>{}</td>'.format(item))
+                        table_list.append('<td><div style=\'padding: 3px; max-width: 700px; word-break: break-all; word-wrap: break-word;\'>{}</div></td>'.format(item))
                     table_list.append('</tr>')
             table_list.append('</table>')
             table = '\n'.join(table_list)
@@ -1179,7 +1184,8 @@ def generate_html(file_content, title, values, type='table', page='default', ext
         html_list.insert(0, '<html>')
         html_list.insert(1, '<head>')
         html_list.insert(2, '<style>{}</style>'.format(table_css_style))
-        html_list.insert(3, '</head>')
+        html_list.insert(3, '{}'.format(datatables_data))
+        html_list.insert(4, '</head>')
         html_list.insert(len(html_list), '</html>')
         # Write HTML file to report directory
         with open(filename, 'w', encoding='utf8') as f:
