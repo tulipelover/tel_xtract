@@ -101,15 +101,13 @@ plus grand nombre.
 
 ## Téléphones Testés et Problèmes Connus
 ### Problèmes connus
-Support pour Android 9 ajouté. Les téléphones déjà testés sous Android 9 et qui causaient problème vont être retestés.  
-Cette liste sera mise à jour au fur et à mesure des retours "terrains" et des tests effectués. Pour le moment, les tests
-montrent que sur certains téléphones sous Android 9, le contacts ne sont pas extraits. Des tests sont en cours pour y 
-remédier.
+Les tests sont en cours. Nous savons que tous les modèles de téléphones ne fonctionneront pas à l'heure actuelle (bien
+que la plupart n'auraont aucun problème).
 
 ### Téléphones testés
 #### Samsung
-* Galaxy S4, (Android 5.0.1): Déroulement normal de l'application, aucune donnée extraite.
-* Galaxy S5 (Android 6.0.1): Déroulement normal de l'application, aucune donnée extraite.
+* Galaxy S4, (Android 5.0.1): Extraction complète réussie.
+* Galaxy S5 (Android 6.0.1): Extraction complète réussie.
 * J6+ (Android 8.1.0): Extraction complète réussie.
 * S8 (Android 8): Extraction complète réussie.
 * S9 (Android 9): Extraction complète réussie.
