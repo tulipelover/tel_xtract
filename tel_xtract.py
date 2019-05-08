@@ -51,6 +51,9 @@ table_css_style = """
          li:not(:last-child) {
          margin: 0 0 10px 0;
          }
+         td {
+		 font-size: 12px
+		 }
          .column {
          float: left;
          padding: 10px;
@@ -91,14 +94,11 @@ datatables_data = """
 			'scrollXInner': '100%',
 			'lengthMenu': [ [50, 100, 200, 500, -1], [50, 100, 200, 500, 'Tous'] ],
 			'pagingType': 'full_numbers',
-			'pageLength': 100,
+			'pageLength': 50,
 			'processing': true,
 			'scrollCollapse': true,
-			'scrollY': '550px',
+			'scrollY': '350px',
 			'bJQueryUI': true,
-			"columnDefs": [
-				{ "width": "50%", "targets": -1 }
-			]
 			});
 		} );
 		
@@ -170,7 +170,7 @@ tel_info = 'Infos Tel.html'
 images = 'Images.html'
 
 # Define all numbers communicated file path
-num_list_file = os.path.join(csv_dir, 'Numéros_comm.csv')
+num_list_file = os.path.join(csv_dir, 'Numéro Téls_comm.csv')
 
 # Define the extraction summary list
 summary_list = list()
@@ -657,7 +657,7 @@ def extract_data(case_data):
                     logging.exception('There was an error parsing contact information in {}'.format(row))
                     continue
         contact_list.sort(key=operator.itemgetter(0))
-        contact_headers = ['Nom', 'Numéro', 'Favori']
+        contact_headers = ['Nom', 'Numéro Tél', 'Favori']
         contact_list.insert(0, contact_headers)
     except:
         logging.exception('There was an error opening {}'.format(forensics_file_list[1]))
@@ -719,7 +719,7 @@ def extract_data(case_data):
                 except:
                     logging.exception('There was an error parsing call log {}'.format(row))
                     continue
-        call_logs_headers = ['Identifiant', 'Nom', 'Numéro', 'Date et heure', 'Durée', 'Type']
+        call_logs_headers = ['ID', 'Nom', 'Numéro Tél', 'Date et heure', 'Durée', 'Type']
         call_logs_list.insert(0, call_logs_headers)
     except:
         logging.exception('There was an error opening {}'.format(forensics_file_list[0]))
@@ -795,7 +795,7 @@ def extract_data(case_data):
                         tid = value
                 asso_mms_contact[tid] = contact
 
-        sms_headers = ['Identifiant', 'Nom Contact', 'Numéro', 'Date et heure', 'Lu', 'Type', 'Message']
+        sms_headers = ['ID', 'Nom Contact', 'Numéro Tél', 'Date et heure', 'Lu', 'Type', 'Message']
         sms_list.insert(0, sms_headers)
     except:
         logging.error('There was an error opening {}'.format(forensics_file_list[5]))
@@ -998,7 +998,7 @@ def get_all_numbers_communicated(call_logs_data, sms_data, mms_data):
         # Write them to file
         with open(num_list_file, 'w', encoding='utf8', newline='') as f:
             csv_writer = csv.writer(f)
-            csv_writer.writerow(['Numéro'])
+            csv_writer.writerow(['Numéro Tél'])
             for num in numbers_list:
                 csv_writer.writerow([num])
     except:
@@ -1134,12 +1134,14 @@ def generate_html(file_content, title, values, type='table', page='default', ext
             count = 0
             for row in content:
                 # Check of body contains background color and extract it
+                extra_row_count = 0
                 if isinstance(row[-1], list):
                     formatted_body = row[-1]
                     bg_color = formatted_body[-1]
                     body = formatted_body[0]
                     del row[-1]
                     row.insert(len(row), body)
+                    extra_row_count += 1
                 else:
                     bg_color = '#CECECE'
 
@@ -1156,8 +1158,11 @@ def generate_html(file_content, title, values, type='table', page='default', ext
                 # Get the rest of the content
                 else:
                     table_list.append('<tr style="background-color: {};">'.format(bg_color))
-                    for item in row:
-                        table_list.append('<td><div style=\'padding: 3px; max-width: 700px; word-break: break-all; word-wrap: break-word;\'>{}</div></td>'.format(item))
+                    for num, item in enumerate(row):
+                        if num == len(row) - extra_row_count:
+                            table_list.append('<td><div style=\'padding: 3px; max-width: 600px; word-break: break-all; word-wrap: break-word;\'>{}</div></td>'.format(item))
+                        else:
+                            table_list.append('<td>{}</td>'.format(item))
                     table_list.append('</tr>')
             table_list.append('</table>')
             table = '\n'.join(table_list)
